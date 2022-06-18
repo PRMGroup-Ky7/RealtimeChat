@@ -42,6 +42,9 @@ public class LoginActivity extends AppCompatActivity {
             allowUserToLogin();
         });
 
+        tvNewAccountLink.setOnClickListener(v -> {
+            sendUserToRegisterActivity();
+        });
 
     }
 
@@ -76,7 +79,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
         if (password.length() < 8) {
-            etPassword.setError("Password must be at least 6 characters");
+            etPassword.setError("Password must be at least 8 characters");
             etPassword.requestFocus();
             return;
         }
@@ -106,4 +109,10 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(mainIntent);
         finish();
     }
+
+    private void sendUserToRegisterActivity() {
+        Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
+        startActivity(registerIntent);
+    }
+
 }
