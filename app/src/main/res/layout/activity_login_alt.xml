@@ -45,7 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="256dp"
                 android:layout_below="@id/login_image"
-                android:layout_marginTop="-5dp">
+                android:layout_marginTop="-1dp">
 
                 <EditText
                     android:id="@+id/login_email"
