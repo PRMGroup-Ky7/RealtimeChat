@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -41,19 +40,9 @@ public class RegisterActivity extends AppCompatActivity {
 
         initializeFields();
 
-        tvAlreadyHaveAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendUserToLoginActivity();
-            }
-        });
+        tvAlreadyHaveAccount.setOnClickListener(v -> sendUserToLoginActivity());
 
-        createAccountButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CreateNewAccount();
-            }
-        });
+        createAccountButton.setOnClickListener(v -> CreateNewAccount());
     }
 
     private void initializeFields() {
