@@ -2,12 +2,15 @@ package com.app.realtimechat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
@@ -80,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 sendUserToLoginActivity();
                 break;
             case R.id.main_create_group_option:
+                requestNewGroup();
                 break;
             case R.id.main_settings_option:
                 break;
@@ -121,4 +125,38 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    private void requestNewGroup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog);
+        builder.setTitle("Enter Group Name :");
+
+        final EditText groupNameField = new EditText(MainActivity.this);
+        groupNameField.setHint("e.g PRM Group");
+        builder.setView(groupNameField);
+
+        builder.setPositiveButton("Create", (dialog, which) -> {
+            String groupName = groupNameField.getText().toString();
+            if (TextUtils.isEmpty(groupName)) {
+                Toast.makeText(MainActivity.this, "Please write Group Name..", Toast.LENGTH_SHORT).show();
+            } else {
+                createNewGroup(groupName);
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.cancel());
+
+        builder.show();
+    }
+
+    private void createNewGroup(final String groupName) {
+        rootRef.child(Constants.CHILD_GROUPS).child(groupName).setValue("")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(MainActivity.this, groupName + " is created successfully.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Error occurred while creating group.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
 }
