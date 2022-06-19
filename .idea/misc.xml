@@ -11,7 +11,10 @@
         <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/drawable/sender_messages_layout.xml" value="0.2165" />
         <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/layout/activity_chat.xml" value="0.209375" />
         <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/layout/activity_login_alt.xml" value="0.5" />
+        <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/layout/activity_main.xml" value="0.209375" />
+        <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/layout/app_bar_layout.xml" value="0.209375" />
         <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/layout/fragment_request.xml" value="0.209375" />
+        <entry key="..\:/Users/trung/AndroidStudioProjects/RealtimeChat/app/src/main/res/menu/options_menu.xml" value="0.209375" />
       </map>
     </option>
   </component>
