@@ -26,7 +26,7 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView tvAlreadyHaveAccount;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference RootRef;
+    private DatabaseReference rootRef;
 
     private ProgressDialog loadingBar;
 
@@ -36,7 +36,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
-        RootRef = FirebaseDatabase.getInstance().getReference();
+        rootRef = FirebaseDatabase.getInstance().getReference();
 
         initializeFields();
 
@@ -85,18 +85,18 @@ public class RegisterActivity extends AppCompatActivity {
         loadingBar.setMessage("Please wait, while we're creating an new account for you");
         loadingBar.setCanceledOnTouchOutside(true);
         loadingBar.show();
-        
+
+        saveDisplayName(name);
+
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                saveDisplayName(name);
                 sendUserToMainActivity();
                 Toast.makeText(this, "Account Created Successfully", Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
             } else {
                 String message = task.getException().toString();
                 Toast.makeText(RegisterActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
             }
+            loadingBar.dismiss();
         });
     }
 
