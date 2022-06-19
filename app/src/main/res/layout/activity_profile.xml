@@ -37,7 +37,7 @@
         android:layout_marginLeft="15dp"
         android:layout_marginTop="25dp"
         android:layout_marginRight="15dp"
-        android:text="hey I'm using Code Cafe chat app"
+        android:text="welcome"
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textSize="25sp"
