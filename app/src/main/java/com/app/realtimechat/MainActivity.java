@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle("Welcome");
+        getSupportActionBar().setTitle("Welcome " + mAuth.getCurrentUser().getDisplayName() + " !");
 
         myViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -120,6 +120,5 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-
     }
 }

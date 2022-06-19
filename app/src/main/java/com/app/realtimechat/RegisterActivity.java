@@ -22,7 +22,7 @@ public class RegisterActivity extends AppCompatActivity {
     private static final String TAG = "RegisterActivity";
 
     private Button createAccountButton;
-    private EditText etEmail, etPassword;
+    private EditText etEmail, etPassword, etName;
     private TextView tvAlreadyHaveAccount;
 
     private FirebaseAuth mAuth;
@@ -49,6 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
         createAccountButton = findViewById(R.id.register_button);
         etEmail = findViewById(R.id.register_email);
         etPassword = findViewById(R.id.register_password);
+        etName = findViewById(R.id.register_name);
         tvAlreadyHaveAccount = findViewById(R.id.already_have_account_link);
 
         loadingBar = new ProgressDialog(this);
@@ -69,14 +70,10 @@ public class RegisterActivity extends AppCompatActivity {
     private void CreateNewAccount() {
         String email = etEmail.getText().toString();
         String password = etPassword.getText().toString();
-        if (email.isEmpty()) {
-            etEmail.setError("Email is required");
-            etEmail.requestFocus();
-            return;
-        }
-        if (password.isEmpty()) {
-            etPassword.setError("Password is required");
-            etPassword.requestFocus();
+        String name = etName.getText().toString();
+
+        if (email.isEmpty() | password.isEmpty() | name.isEmpty()) {
+            Toast.makeText(this, "Please fill all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
         if (password.length() < 8) {
@@ -88,9 +85,10 @@ public class RegisterActivity extends AppCompatActivity {
         loadingBar.setMessage("Please wait, while we're creating an new account for you");
         loadingBar.setCanceledOnTouchOutside(true);
         loadingBar.show();
-        saveDisplayName();
+        
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                saveDisplayName(name);
                 sendUserToMainActivity();
                 Toast.makeText(this, "Account Created Successfully", Toast.LENGTH_SHORT).show();
                 loadingBar.dismiss();
@@ -102,10 +100,8 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void saveDisplayName() {
-
+    private void saveDisplayName(String displayName) {
         FirebaseUser user = mAuth.getCurrentUser();
-        String displayName = etEmail.getText().toString();
 
         if (user != null) {
             UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
