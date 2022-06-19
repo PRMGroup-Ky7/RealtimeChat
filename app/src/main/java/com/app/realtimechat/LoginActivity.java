@@ -21,7 +21,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference UsersRef;
+    private DatabaseReference userRef;
 
     private ProgressDialog loadingBar;
     private Button loginButton;
@@ -35,7 +35,7 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        UsersRef = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
+        userRef = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
 
         initializeFields();
 
@@ -69,16 +69,11 @@ public class LoginActivity extends AppCompatActivity {
         String email = etEmail.getText().toString();
         String password = etPassword.getText().toString();
 
-        if (email.isEmpty()) {
-            etEmail.setError("Email is required");
-            etEmail.requestFocus();
+        if (email.isEmpty() | password.isEmpty()) {
+            Toast.makeText(this, "Please fill all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (password.isEmpty()) {
-            etPassword.setError("Password is required");
-            etPassword.requestFocus();
-            return;
-        }
+
         if (password.length() < 8) {
             etPassword.setError("Password must be at least 8 characters");
             etPassword.requestFocus();
