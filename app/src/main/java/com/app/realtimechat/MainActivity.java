@@ -26,6 +26,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
@@ -46,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle("Welcome " + mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getDisplayName() : "" + " !");
+        String name = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getDisplayName() : "";
+        getSupportActionBar().setTitle("Welcome " + name + " !");
 
         myViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -65,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             verifyUserExist();
         }
+        updateUserStatus("online");
     }
 
     @Override
@@ -131,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Enter Group Name :");
 
         final EditText groupNameField = new EditText(MainActivity.this);
+        groupNameField.setWidth(50);
         groupNameField.setHint("e.g PRM Group");
         builder.setView(groupNameField);
 
@@ -159,4 +166,38 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            updateUserStatus("offline");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            updateUserStatus("offline");
+        }
+    }
+
+    private void updateUserStatus(String state) {
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YYYY hh:mm a");
+        LocalDateTime now = LocalDateTime.now();
+
+        HashMap<String, Object> onlineStateMap = new HashMap<>();
+        onlineStateMap.put("currentDatetime", dtf.format(now));
+        onlineStateMap.put("state", state);
+
+        FirebaseUser user = mAuth.getCurrentUser();
+        rootRef
+                .child(Constants.CHILD_USERS)
+                .child(user.getUid())
+                .child("userState")
+                .updateChildren(onlineStateMap);
+    }
 }
