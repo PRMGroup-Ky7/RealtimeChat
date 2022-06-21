@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.main_settings_option:
                 break;
             case R.id.main_find_friends_option:
+                sendUsersToFindFriendsActivity();
                 break;
         }
         return true;
@@ -157,6 +158,11 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Error occurred while creating group.", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void sendUsersToFindFriendsActivity (){
+        Intent findFriendsIntent = new Intent(MainActivity.this, FindFriendsActivity.class);
+        startActivity(findFriendsIntent);
     }
 
 }
