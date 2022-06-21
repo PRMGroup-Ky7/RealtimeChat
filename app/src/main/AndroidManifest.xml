@@ -31,6 +31,10 @@
         <activity
             android:name=".SettingsActivity"
             android:parentActivityName=".MainActivity" />
+        <activity android:name=".GroupChatActivity" />
+        <activity
+            android:name=".ChatActivity"
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

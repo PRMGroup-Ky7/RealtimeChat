@@ -2,12 +2,15 @@ package com.app.realtimechat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
@@ -22,6 +25,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle("Welcome " + mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getDisplayName() : "" + " !");
+        String name = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getDisplayName() : "";
+        getSupportActionBar().setTitle("Welcome " + name + " !");
 
         myViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -62,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             verifyUserExist();
         }
+        updateUserStatus("online");
     }
 
     @Override
@@ -80,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 sendUserToLoginActivity();
                 break;
             case R.id.main_create_group_option:
+                requestNewGroup();
                 break;
             case R.id.main_settings_option:
                 break;
@@ -120,5 +130,74 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+    private void requestNewGroup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog);
+        builder.setTitle("Enter Group Name :");
+
+        final EditText groupNameField = new EditText(MainActivity.this);
+        groupNameField.setWidth(50);
+        groupNameField.setHint("e.g PRM Group");
+        builder.setView(groupNameField);
+
+        builder.setPositiveButton("Create", (dialog, which) -> {
+            String groupName = groupNameField.getText().toString();
+            if (TextUtils.isEmpty(groupName)) {
+                Toast.makeText(MainActivity.this, "Please write Group Name..", Toast.LENGTH_SHORT).show();
+            } else {
+                createNewGroup(groupName);
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.cancel());
+
+        builder.show();
+    }
+
+    private void createNewGroup(final String groupName) {
+        rootRef.child(Constants.CHILD_GROUPS).child(groupName).setValue("")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(MainActivity.this, groupName + " is created successfully.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Error occurred while creating group.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            updateUserStatus("offline");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            updateUserStatus("offline");
+        }
+    }
+
+    private void updateUserStatus(String state) {
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YYYY hh:mm a");
+        LocalDateTime now = LocalDateTime.now();
+
+        HashMap<String, Object> onlineStateMap = new HashMap<>();
+        onlineStateMap.put("currentDatetime", dtf.format(now));
+        onlineStateMap.put("state", state);
+
+        FirebaseUser user = mAuth.getCurrentUser();
+        rootRef
+                .child(Constants.CHILD_USERS)
+                .child(user.getUid())
+                .child("userState")
+                .updateChildren(onlineStateMap);
     }
 }
