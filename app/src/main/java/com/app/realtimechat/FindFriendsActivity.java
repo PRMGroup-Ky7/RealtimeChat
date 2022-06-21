@@ -43,8 +43,6 @@ public class FindFriendsActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         toolbar = findViewById(R.id.find_friends_toolbar);
         friendListRecyclerView = findViewById(R.id.find_friends_recycler_list);
-
-        Log.d("TAG", "Uid is: " + mAuth.getCurrentUser().getUid() );
         friendListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -78,7 +76,7 @@ public class FindFriendsActivity extends AppCompatActivity {
         FirebaseRecyclerAdapter<Contacts,FindFriendViewHolder> adapter = new FirebaseRecyclerAdapter<Contacts, FindFriendViewHolder>(options) {
             @Override
             protected void onBindViewHolder(@NonNull FindFriendViewHolder holder, int position, @NonNull Contacts model) {
-                Log.d("TAG", "Uid is: " + mAuth.getCurrentUser().getUid() + " model UiD is: " +model.getUid());
+
                 holder.userName.setText(model.getName());
                 holder.userStatus.setText(model.getStatus());
                 Picasso.get().load(model.getImage()).placeholder(R.drawable.profile_image).into(holder.profileImage);
