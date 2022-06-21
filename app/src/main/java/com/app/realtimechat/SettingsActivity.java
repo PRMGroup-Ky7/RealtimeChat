@@ -1,5 +1,9 @@
 package com.app.realtimechat;
 
+
+
+
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 
 import androidx.annotation.Nullable;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -31,6 +36,7 @@ import java.util.HashMap;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class SettingsActivity extends AppCompatActivity {
+
 
     private CircleImageView profileImageView;
     private EditText editUsernameView, editStatusView;
@@ -158,4 +164,5 @@ public class SettingsActivity extends AppCompatActivity {
 
 
     }
+
 }
