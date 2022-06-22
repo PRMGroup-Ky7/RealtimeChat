@@ -2,7 +2,7 @@ package com.app.realtimechat.entities;
 
 public class Contacts {
 
-    public String name, status, image;
+    public String name, status, image, uid;
 
     public Contacts() {
     }
@@ -11,6 +11,13 @@ public class Contacts {
         this.name = name;
         this.status = status;
         this.image = image;
+    }
+
+    public Contacts(String name, String status, String image, String uid) {
+        this.name = name;
+        this.status = status;
+        this.image = image;
+        this.uid = uid;
     }
 
     public String getName() {
@@ -36,4 +43,8 @@ public class Contacts {
     public void setImage(String image) {
         this.image = image;
     }
+
+    public String getUid() {return uid;}
+
+    public void setUid(String uid) {this.uid = uid;}
 }
