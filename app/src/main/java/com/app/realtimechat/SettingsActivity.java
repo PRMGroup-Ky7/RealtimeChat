@@ -66,24 +66,17 @@ public class SettingsActivity extends AppCompatActivity {
 
         // get all field view
         initField();
+        editUsernameView.setVisibility(View.INVISIBLE);
 
         retrieveUserInformation();
 
-        updateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                forwardUpdateToDatabase();
-            }
-        });
+        updateButton.setOnClickListener(v -> forwardUpdateToDatabase());
 
-        editProfileImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent galleryIntent = new Intent();
-                galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
-                galleryIntent.setType("image/*");
-                startActivityForResult(galleryIntent, GALLERY_PICK);
-            }
+        editProfileImageView.setOnClickListener(v -> {
+            Intent galleryIntent = new Intent();
+            galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
+            galleryIntent.setType("image/*");
+            startActivityForResult(galleryIntent, GALLERY_PICK);
         });
     }
 
@@ -92,15 +85,13 @@ public class SettingsActivity extends AppCompatActivity {
 
         // set username invisible if update , visible if create profile
         editUsernameView = findViewById(R.id.set_user_name);
-        editUsernameView.setVisibility(View.INVISIBLE);
-
         editStatusView = findViewById(R.id.set_profile_status);
         updateButton = findViewById(R.id.update_settings_button);
         settingsToolbar = findViewById(R.id.settings_toolbar);
         loadingBar = new ProgressDialog(this);
 
-        //setSupportActionBar(settingsToolbar);
-
+        setSupportActionBar(settingsToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setTitle("Update Profile");
     }
@@ -110,23 +101,30 @@ public class SettingsActivity extends AppCompatActivity {
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.exists()) {
-                            String username = snapshot.child("name").getValue().toString();
-                            String status = snapshot.child("status").getValue().toString();
+                            if( snapshot.exists() && snapshot.hasChild("name") && snapshot.hasChild("image")) {
 
-                            editUsernameView.setText(username);
-                            editStatusView.setText(status);
+                                String username = snapshot.child("name").getValue().toString();
+                                editUsernameView.setText(username);
 
-                            if(snapshot.hasChild("image")) {
+                                String status = snapshot.child("status").getValue().toString();
+                                editStatusView.setText(status);
+
                                 String imageUrl = snapshot.child("image").getValue().toString();
                                 Picasso.get().load(imageUrl).into(editProfileImageView);
-                            }
+                            } else if (snapshot.exists() && snapshot.hasChild("name")){
 
-                        } else {
-                            // new profile
-                            editUsernameView.setVisibility(View.VISIBLE);
+                                String username = snapshot.child("name").getValue().toString();
+                                editUsernameView.setText(username);
+
+                                String status = snapshot.child("status").getValue().toString();
+                                editStatusView.setText(status);
+
+                            } else {
+                                // new profile
+                                editUsernameView.setVisibility(View.VISIBLE);
+                            }
                         }
-                    }
+
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
@@ -146,17 +144,14 @@ public class SettingsActivity extends AppCompatActivity {
         } else {
             HashMap<String, Object> profileMap = new HashMap();
             profileMap.put("uid", currentUserId);
-            profileMap.put("username", newUsername);
+            profileMap.put("name", newUsername);
             profileMap.put("status", newStatus);
             dbRef.child("Users").child(currentUserId).updateChildren(profileMap)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()) {
-                                goToMainActivity();
-                            } else {
-                                Toast.makeText(SettingsActivity.this, "Update unsucessful", Toast.LENGTH_SHORT).show();
-                            }
+                    .addOnCompleteListener(task -> {
+                        if(task.isSuccessful()) {
+                            goToMainActivity();
+                        } else {
+                            Toast.makeText(SettingsActivity.this, "Update unsucessful", Toast.LENGTH_SHORT).show();
                         }
                     });
         }
@@ -174,7 +169,6 @@ public class SettingsActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == GALLERY_PICK && resultCode == RESULT_OK && data != null) {
-            Uri imageUri = data.getData();
 
             CropImage.activity()
                     .setGuidelines(CropImageView.Guidelines.ON)
@@ -199,29 +193,26 @@ public class SettingsActivity extends AppCompatActivity {
                         .child("Profile Images")
                         .child(currentUserId+".jpg");
 
-                imageProfileRef.putFile(resultUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                        if(task.isSuccessful()) {
-                            String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
-                            dbRef.child(currentUserId).child("image")
-                                    .setValue(downloadUrl)
-                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            if (task.isSuccessful()) {
-                                                loadingBar.dismiss();
-                                                Toast.makeText(SettingsActivity.this, "Profile image uploaded successfully", Toast.LENGTH_SHORT).show();
-                                            } else {
-                                                loadingBar.dismiss();
-                                                String message = task.getException().toString();
-                                                Toast.makeText(SettingsActivity.this, "Error uploading image database: "+message, Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-                                    });
-                        } else {
-                            Toast.makeText(SettingsActivity.this, "Error uploading image database", Toast.LENGTH_SHORT).show();
-                        }
+                imageProfileRef.putFile(resultUri).addOnCompleteListener(task -> {
+                    if(task.isSuccessful()) {
+                        final String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
+                        dbRef.child("Users").child(currentUserId).child("image")
+                                .setValue(downloadUrl)
+                                .addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        loadingBar.dismiss();
+                                        Picasso.get().load(downloadUrl).into(editProfileImageView);
+                                        Toast.makeText(SettingsActivity.this, "Profile image uploaded successfully", Toast.LENGTH_SHORT).show();
+
+                                    } else {
+                                        loadingBar.dismiss();
+                                        String message = task1.getException().toString();
+                                        Toast.makeText(SettingsActivity.this, "Error uploading image database: "+message, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    } else {
+                        String message = task.getException().toString();
+                        Toast.makeText(SettingsActivity.this, "Error uploading image database "+message, Toast.LENGTH_SHORT).show();
                     }
                 });
             }

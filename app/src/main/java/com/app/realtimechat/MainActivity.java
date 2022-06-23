@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
                 requestNewGroup();
                 break;
             case R.id.main_settings_option:
+                sendUserToSettingsActivity();
                 break;
             case R.id.main_find_friends_option:
                 sendUsersToFindFriendsActivity();
