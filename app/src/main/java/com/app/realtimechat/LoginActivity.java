@@ -11,17 +11,15 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.app.realtimechat.utils.Constants;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+
+import java.io.IOException;
 
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference userRef;
 
     private ProgressDialog loadingBar;
     private Button loginButton;
@@ -35,12 +33,15 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        userRef = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
 
         initializeFields();
 
         loginButton.setOnClickListener(v -> {
-            allowUserToLogin();
+            try {
+                allowUserToLogin();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
 
         tvNewAccountLink.setOnClickListener(v -> {
@@ -62,10 +63,14 @@ public class LoginActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.login_email);
         etPassword = findViewById(R.id.login_password);
         tvNewAccountLink = findViewById(R.id.need_new_account_link);
+
         loadingBar = new ProgressDialog(this);
+        loadingBar.setTitle("Login");
+        loadingBar.setMessage("Please wait while we are checking your credentials");
+        loadingBar.setCanceledOnTouchOutside(false);
     }
 
-    private void allowUserToLogin() {
+    private void allowUserToLogin() throws IOException {
         String email = etEmail.getText().toString();
         String password = etPassword.getText().toString();
 
@@ -79,22 +84,16 @@ public class LoginActivity extends AppCompatActivity {
             etPassword.requestFocus();
             return;
         }
-
-        loadingBar.setTitle("Login");
-        loadingBar.setMessage("Please wait while we are checking your credentials");
-        loadingBar.setCanceledOnTouchOutside(false);
         loadingBar.show();
-
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 sendUserToMainActivity();
                 Toast.makeText(LoginActivity.this, "Logged in Successful...", Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
             } else {
                 String message = task.getException().toString();
                 Toast.makeText(LoginActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
             }
+            loadingBar.dismiss();
         });
 
     }
