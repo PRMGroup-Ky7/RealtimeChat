@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.main_settings_option:
                 break;
             case R.id.main_find_friends_option:
+                sendUsersToFindFriendsActivity();
                 break;
         }
         return true;
@@ -166,6 +167,13 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+
+    private void sendUsersToFindFriendsActivity (){
+        Intent findFriendsIntent = new Intent(MainActivity.this, FindFriendsActivity.class);
+        startActivity(findFriendsIntent);
+    }
+
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -200,4 +208,5 @@ public class MainActivity extends AppCompatActivity {
                 .child("userState")
                 .updateChildren(onlineStateMap);
     }
+
 }
