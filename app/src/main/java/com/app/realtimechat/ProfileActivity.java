@@ -102,11 +102,19 @@ public class ProfileActivity extends AppCompatActivity {
 
                     String requestType = snapshot.child(visitedUserId).child("requestType").getValue().toString();
 
-                    if (requestType.equalsIgnoreCase("sent")){
+                    if (requestType.equalsIgnoreCase("request_sent")){
                         requestState = "request_sent";
-                    } else if (requestType.equalsIgnoreCase("receive")){
+                        sendMessageRequestButton.setText("Cancel Chat Request");
+                    } else if (requestType.equalsIgnoreCase("request_receive")){
                         requestState = "request_receive";
+                        sendMessageRequestButton.setText("Accept Request");
                         declineMessageRequestButton.setVisibility(View.VISIBLE);
+                        declineMessageRequestButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                cancelContactRequest();
+                            }
+                        });
                     }
                 }else {
                     contactReference.child(currentUserId).addValueEventListener(new ValueEventListener() {
@@ -143,11 +151,13 @@ public class ProfileActivity extends AppCompatActivity {
 
                 case "request_sent" : {
                     Log.i("test","request_sent");
+                    cancelContactRequest();
                     break;
                 }
 
                 case "request_receive" : {
                     Log.i("test","request_receive");
+                    acceptContactRequest();
                     break;
                 }
 
@@ -159,6 +169,71 @@ public class ProfileActivity extends AppCompatActivity {
         }
     });
 
+    }
+
+    private void acceptContactRequest() {
+        contactReference.child(currentUserId)
+                .child(visitedUserId)
+                .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            contactReference.child(visitedUserId)
+                                    .child(currentUserId)
+                                    .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()){
+                                                contactRequestReference.child(currentUserId)
+                                                        .child(visitedUserId)
+                                                        .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<Void> task) {
+                                                                if (task.isSuccessful()){
+                                                                    contactRequestReference.child(visitedUserId)
+                                                                            .child(currentUserId)
+                                                                            .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                                @Override
+                                                                                public void onComplete(@NonNull Task<Void> task) {
+                                                                                    requestState="friend";
+                                                                                    sendMessageRequestButton.setText("Remove this contact");
+                                                                                    declineMessageRequestButton.setVisibility(View.GONE);
+                                                                                }
+                                                                            });
+                                                                }
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    });
+                        }
+
+                    }
+                });
+    }
+
+    private void cancelContactRequest() {
+        contactRequestReference.child(currentUserId)
+                .child(visitedUserId)
+                .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            contactRequestReference.child(visitedUserId)
+                                    .child(currentUserId)
+                                    .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if(task.isSuccessful()){
+                                                requestState = "no_request";
+                                                sendMessageRequestButton.setText("Send Contact Request");
+                                            }
+                                        }
+                                    });
+                        }
+
+                    }
+                });
     }
 
     private void sendContactRequest() {
