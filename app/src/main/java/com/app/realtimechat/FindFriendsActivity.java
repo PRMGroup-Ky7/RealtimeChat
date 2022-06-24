@@ -6,6 +6,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -75,16 +77,31 @@ public class FindFriendsActivity extends AppCompatActivity {
 
         FirebaseRecyclerAdapter<Contacts,FindFriendViewHolder> adapter = new FirebaseRecyclerAdapter<Contacts, FindFriendViewHolder>(options) {
             @Override
-            protected void onBindViewHolder(@NonNull FindFriendViewHolder holder, int position, @NonNull Contacts model) {
+            protected void onBindViewHolder(@NonNull FindFriendViewHolder holder, @SuppressLint("RecyclerView") final int position, @NonNull Contacts model) {
 
                 holder.userName.setText(model.getName());
                 holder.userStatus.setText(model.getStatus());
                 Picasso.get().load(model.getImage()).placeholder(R.drawable.profile_image).into(holder.profileImage);
 
-                if(model.getUid().equalsIgnoreCase(mAuth.getCurrentUser().getUid())) {
-                    holder.itemView.setVisibility(View.GONE);
-                    holder.itemView.getLayoutParams().height=0;
+                if(model.getUid() != null) {
+                    Log.i("StuFF",getRef(position).getKey() + " /" + model.getName());
+                    if(model.getUid().equalsIgnoreCase(mAuth.getCurrentUser().getUid()) || model.getName()== null) {
+                        hideUser(holder.itemView);
+                    } else {
+                        holder.itemView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                String visitedUserId = getRef(position).getKey();
+                                Intent intentToProfile = new Intent(FindFriendsActivity.this,ProfileActivity.class);
+                                intentToProfile.putExtra("visitedUserId",visitedUserId);
+                                startActivity(intentToProfile);
+                            }
+                        });
+                    }
+                } else {
+                    hideUser(holder.itemView);
                 }
+
             }
 
             @NonNull
@@ -97,6 +114,11 @@ public class FindFriendsActivity extends AppCompatActivity {
         };
         friendListRecyclerView.setAdapter(adapter);
         adapter.startListening();
+    }
+
+    public void hideUser(View view) {
+       view.setVisibility(View.GONE);
+       view.getLayoutParams().height=0;
     }
 
     public static class FindFriendViewHolder extends RecyclerView.ViewHolder {
