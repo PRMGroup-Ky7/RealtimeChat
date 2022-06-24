@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -21,12 +22,12 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private String receiverUserID, senderUserID;
+    private String visitedUserId, currentUserId,requestState;
 
     private CircleImageView userProfileImage;
     private TextView userProfileName, userProfileStatus;
-    private Button SendMessageRequestButton, DeclineMessageRequestButton;
-    private DatabaseReference userReference;
+    private Button sendMessageRequestButton, declineMessageRequestButton;
+    private DatabaseReference userReference,contactRequestReference,contactReference;
     private FirebaseAuth mAuth;
 
     @Override
@@ -35,24 +36,28 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         userReference = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
+        contactRequestReference = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_REQUEST);
+        contactReference = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_CONTACTS);
+
         mAuth = FirebaseAuth.getInstance();
 
-        senderUserID=mAuth.getCurrentUser().getUid();
-        receiverUserID=getIntent().getStringExtra("visitedUserId");
-        Log.i("ProfileStuff",receiverUserID);
+        currentUserId=mAuth.getCurrentUser().getUid();
+        visitedUserId=getIntent().getStringExtra("visitedUserId");
+        requestState = "no_request";
+        Log.i("ProfileStuff",visitedUserId);
 
         userProfileImage            = findViewById(R.id.visit_profile_image);
         userProfileName             = findViewById(R.id.visit_user_name);
         userProfileStatus           = findViewById(R.id.visit_profile_status);
-        SendMessageRequestButton    = findViewById(R.id.send_message_request_button);
-        DeclineMessageRequestButton = findViewById(R.id.decline_message_request_button);
+        sendMessageRequestButton    = findViewById(R.id.send_message_request_button);
+        declineMessageRequestButton = findViewById(R.id.decline_message_request_button);
 
         getVisitedUserInfo();
 
     }
 
     private void getVisitedUserInfo() {
-        userReference.child(receiverUserID).addValueEventListener(new ValueEventListener() {
+        userReference.child(visitedUserId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if ((snapshot.exists()) && (snapshot.hasChild("image"))) {
@@ -64,7 +69,7 @@ public class ProfileActivity extends AppCompatActivity {
                     userProfileName.setText(userName);
                     userProfileStatus.setText(userStatus);
 
-//                    ManageChatRequests();
+                    ManageChatRequests();
 
                 } else {
                     String userName = snapshot.child("name").getValue().toString();
@@ -73,7 +78,7 @@ public class ProfileActivity extends AppCompatActivity {
                     userProfileName.setText(userName);
                     userProfileStatus.setText(userStatus);
 
-//                    ManageChatRequests();
+                    ManageChatRequests();
                 }
             }
 
@@ -82,5 +87,71 @@ public class ProfileActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void ManageChatRequests() {
+//        contactRequestReference.child(currentUserId).child(visitedUserId).setValue("stuff");
+        contactRequestReference.child(currentUserId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.hasChild(visitedUserId)){
+
+                    String requestType = snapshot.child(visitedUserId).child("requestType").getValue().toString();
+
+                    if (requestType.equalsIgnoreCase("sent")){
+                        requestState = "request_sent";
+                    } else if (requestType.equalsIgnoreCase("receive")){
+                        requestState = "request_receive";
+                    }
+                }else {
+                    contactReference.child(currentUserId).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.hasChild(visitedUserId)){
+                                requestState = "friend";
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    sendMessageRequestButton.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (requestState) {
+                case "no_request" : {
+                    Log.i("test","no_request");
+                    break;
+                }
+
+                case "request_sent" : {
+                    Log.i("test","request_sent");
+                    break;
+                }
+
+                case "request_receive" : {
+                    Log.i("test","request_receive");
+                    break;
+                }
+
+                case "friend" : {
+                    Log.i("test","friend");
+                    break;
+                }
+            }
+        }
+    });
+
     }
 }
