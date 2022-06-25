@@ -122,6 +122,7 @@ public class ProfileActivity extends AppCompatActivity {
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             if (snapshot.hasChild(visitedUserId)){
                                 requestState = "friend";
+                                sendMessageRequestButton.setText("Remove this contact");
                             }
                         }
 
@@ -163,12 +164,36 @@ public class ProfileActivity extends AppCompatActivity {
 
                 case "friend" : {
                     Log.i("test","friend");
+                    removeContact();
                     break;
                 }
             }
         }
     });
 
+    }
+
+    private void removeContact() {
+        contactReference.child(currentUserId)
+                .child(visitedUserId)
+                .removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            contactReference.child(visitedUserId)
+                                    .child(currentUserId)
+                                    .removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if(task.isSuccessful()){
+                                                requestState = "no_request";
+                                                sendMessageRequestButton.setText("Send Contact Request");
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
     }
 
     private void acceptContactRequest() {
