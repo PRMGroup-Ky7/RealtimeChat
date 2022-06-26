@@ -1,7 +1,7 @@
 package com.app.realtimechat.entities;
 
 public class Messages {
-    private String from, message, type, to, messageID, time, date, name;
+    private String from, message, type, to, messageID, currentDatetime, name;
 
     public Messages() {
     }
@@ -46,21 +46,6 @@ public class Messages {
         this.messageID = messageID;
     }
 
-    public String getTime() {
-        return time;
-    }
-
-    public void setTime(String time) {
-        this.time = time;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
 
     public String getName() {
         return name;
@@ -68,5 +53,13 @@ public class Messages {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCurrentDatetime() {
+        return currentDatetime;
+    }
+
+    public void setCurrentDatetime(String currentDatetime) {
+        this.currentDatetime = currentDatetime;
     }
 }

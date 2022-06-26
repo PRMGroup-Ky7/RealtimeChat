@@ -203,7 +203,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 .addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
                                         loadingBar.dismiss();
-                                        Picasso.get().load(downloadUrl.toString()).into(editProfileImageView);
+                                        Picasso.get().load(resultUri).into(editProfileImageView);
                                         Toast.makeText(SettingsActivity.this, "Profile image uploaded successfully", Toast.LENGTH_SHORT).show();
 
                                     } else {

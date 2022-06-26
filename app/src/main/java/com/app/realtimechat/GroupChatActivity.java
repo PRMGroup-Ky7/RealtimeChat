@@ -22,8 +22,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -38,7 +38,7 @@ public class GroupChatActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference usersRef, groupNameRef, groupMessageKeyRef;
 
-    private String currentGroupName, currentUserID, currentUserName, currentDate, currentTime;
+    private String currentGroupName, currentUserID, currentUserName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -133,13 +133,8 @@ public class GroupChatActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(message)) {
             Toast.makeText(this, "Please write a message", Toast.LENGTH_SHORT).show();
         } else {
-            Calendar calForDate = Calendar.getInstance();
-            SimpleDateFormat currentDateFormat = new SimpleDateFormat("MMM dd, yyyy");
-            currentDate = currentDateFormat.format(calForDate.getTime());
-
-            Calendar calForTime = Calendar.getInstance();
-            SimpleDateFormat currentTimeFormat = new SimpleDateFormat("hh:mm a");
-            currentTime = currentTimeFormat.format(calForTime.getTime());
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YYYY hh:mm a");
+            LocalDateTime now = LocalDateTime.now();
 
             HashMap<String, Object> groupMessageKey = new HashMap<>();
             groupNameRef.updateChildren(groupMessageKey);
@@ -149,8 +144,7 @@ public class GroupChatActivity extends AppCompatActivity {
             HashMap<String, Object> messageInfoMap = new HashMap<>();
             messageInfoMap.put("name", currentUserName);
             messageInfoMap.put("message", message);
-            messageInfoMap.put("date", currentDate);
-            messageInfoMap.put("time", currentTime);
+            messageInfoMap.put("currentDatetime", dtf.format(now));
 
             groupMessageKeyRef.updateChildren(messageInfoMap);
         }
@@ -160,12 +154,11 @@ public class GroupChatActivity extends AppCompatActivity {
         Iterator iterator = dataSnapshot.getChildren().iterator();
 
         while (iterator.hasNext()) {
-            String chatDate = ((DataSnapshot) iterator.next()).getValue().toString();
-            String chatMessage = ((DataSnapshot) iterator.next()).getValue().toString();
-            String chatName = ((DataSnapshot) iterator.next()).getValue().toString();
-            String chatTime = ((DataSnapshot) iterator.next()).getValue().toString();
+            String currentDatetime = ((DataSnapshot) iterator.next()).getValue().toString();
+            String message = ((DataSnapshot) iterator.next()).getValue().toString();
+            String name = ((DataSnapshot) iterator.next()).getValue().toString();
 
-            displayTextMessages.append(chatName + " :\n" + chatMessage + "\n" + chatTime + "   " + chatDate + "\n\n\n");
+            displayTextMessages.append(name + " sent : " + message + "\n" + currentDatetime + "\n\n\n");
             mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
         }
     }
