@@ -3,7 +3,6 @@ package com.app.realtimechat;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -12,10 +11,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -26,7 +21,6 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView tvAlreadyHaveAccount;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference rootRef;
 
     private ProgressDialog loadingBar;
 
@@ -36,7 +30,6 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
-        rootRef = FirebaseDatabase.getInstance().getReference();
 
         initializeFields();
 
@@ -49,7 +42,6 @@ public class RegisterActivity extends AppCompatActivity {
         createAccountButton = findViewById(R.id.register_button);
         etEmail = findViewById(R.id.register_email);
         etPassword = findViewById(R.id.register_password);
-        etName = findViewById(R.id.register_name);
         tvAlreadyHaveAccount = findViewById(R.id.already_have_account_link);
 
         loadingBar = new ProgressDialog(this);
@@ -70,9 +62,8 @@ public class RegisterActivity extends AppCompatActivity {
     private void CreateNewAccount() {
         String email = etEmail.getText().toString();
         String password = etPassword.getText().toString();
-        String name = etName.getText().toString();
 
-        if (email.isEmpty() | password.isEmpty() | name.isEmpty()) {
+        if (email.isEmpty() | password.isEmpty()) {
             Toast.makeText(this, "Please fill all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -86,8 +77,6 @@ public class RegisterActivity extends AppCompatActivity {
         loadingBar.setCanceledOnTouchOutside(true);
         loadingBar.show();
 
-        saveDisplayName(name);
-
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 sendUserToMainActivity();
@@ -100,21 +89,4 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void saveDisplayName(String displayName) {
-        FirebaseUser user = mAuth.getCurrentUser();
-
-        if (user != null) {
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setDisplayName(displayName)
-                    .build();
-
-            user.updateProfile(profileUpdates)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Log.d("FlashChat", "User name updated.");
-                        }
-                    });
-        }
-
-    }
 }

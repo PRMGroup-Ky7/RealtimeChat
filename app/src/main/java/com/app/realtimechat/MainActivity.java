@@ -47,11 +47,11 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();
+        FirebaseUser user = mAuth.getCurrentUser();
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
-        String name = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getDisplayName() : "";
-        getSupportActionBar().setTitle("Welcome " + name + " !");
+        getSupportActionBar().setTitle("Welcome " + user.getDisplayName() + " !");
 
         myViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void sendUsersToFindFriendsActivity (){
+    private void sendUsersToFindFriendsActivity() {
         Intent findFriendsIntent = new Intent(MainActivity.this, FindFriendsActivity.class);
         startActivity(findFriendsIntent);
     }

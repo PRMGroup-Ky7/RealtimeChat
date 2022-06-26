@@ -5,21 +5,20 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import androidx.annotation.Nullable;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,7 +26,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -38,18 +36,16 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    private static final int GALLERY_PICK = 5;
     private CircleImageView editProfileImageView;
     private EditText editUsernameView, editStatusView;
     private Button updateButton;
     private ProgressDialog loadingBar;
     private Toolbar settingsToolbar;
-
     private String currentUserId;
     private FirebaseAuth fireAuth;
     private DatabaseReference dbRef;
     private StorageReference storageRef;
-
-    private static final int GALLERY_PICK = 5;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -101,29 +97,29 @@ public class SettingsActivity extends AppCompatActivity {
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if( snapshot.exists() && snapshot.hasChild("name") && snapshot.hasChild("image")) {
+                        if (snapshot.exists() && snapshot.hasChild("name") && snapshot.hasChild("image")) {
 
-                                String username = snapshot.child("name").getValue().toString();
-                                editUsernameView.setText(username);
+                            String username = snapshot.child("name").getValue().toString();
+                            editUsernameView.setText(username);
 
-                                String status = snapshot.child("status").getValue().toString();
-                                editStatusView.setText(status);
+                            String status = snapshot.child("status").getValue().toString();
+                            editStatusView.setText(status);
 
-                                String imageUrl = snapshot.child("image").getValue().toString();
-                                Picasso.get().load(imageUrl).into(editProfileImageView);
-                            } else if (snapshot.exists() && snapshot.hasChild("name")){
+                            String imageUrl = snapshot.child("image").getValue().toString();
+                            Picasso.get().load(imageUrl).into(editProfileImageView);
+                        } else if (snapshot.exists() && snapshot.hasChild("name")) {
 
-                                String username = snapshot.child("name").getValue().toString();
-                                editUsernameView.setText(username);
+                            String username = snapshot.child("name").getValue().toString();
+                            editUsernameView.setText(username);
 
-                                String status = snapshot.child("status").getValue().toString();
-                                editStatusView.setText(status);
+                            String status = snapshot.child("status").getValue().toString();
+                            editStatusView.setText(status);
 
-                            } else {
-                                // new profile
-                                editUsernameView.setVisibility(View.VISIBLE);
-                            }
+                        } else {
+                            // new profile
+                            editUsernameView.setVisibility(View.VISIBLE);
                         }
+                    }
 
 
                     @Override
@@ -146,9 +142,10 @@ public class SettingsActivity extends AppCompatActivity {
             profileMap.put("uid", currentUserId);
             profileMap.put("name", newUsername);
             profileMap.put("status", newStatus);
+            saveDisplayName(newUsername);
             dbRef.child("Users").child(currentUserId).updateChildren(profileMap)
                     .addOnCompleteListener(task -> {
-                        if(task.isSuccessful()) {
+                        if (task.isSuccessful()) {
                             goToMainActivity();
                         } else {
                             Toast.makeText(SettingsActivity.this, "Update unsucessful", Toast.LENGTH_SHORT).show();
@@ -172,7 +169,7 @@ public class SettingsActivity extends AppCompatActivity {
 
             CropImage.activity()
                     .setGuidelines(CropImageView.Guidelines.ON)
-                    .setAspectRatio(1,1)
+                    .setAspectRatio(1, 1)
                     .start(this);
         }
 
@@ -190,11 +187,11 @@ public class SettingsActivity extends AppCompatActivity {
 
                 StorageReference imageProfileRef =
                         storageRef
-                        .child("Profile Images")
-                        .child(currentUserId+".jpg");
+                                .child("Profile Images")
+                                .child(currentUserId + ".jpg");
 
                 imageProfileRef.putFile(resultUri).addOnCompleteListener(task -> {
-                    if(task.isSuccessful()) {
+                    if (task.isSuccessful()) {
                         final String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
                         dbRef.child("Users").child(currentUserId).child("image")
                                 .setValue(downloadUrl)
@@ -207,16 +204,33 @@ public class SettingsActivity extends AppCompatActivity {
                                     } else {
                                         loadingBar.dismiss();
                                         String message = task1.getException().toString();
-                                        Toast.makeText(SettingsActivity.this, "Error uploading image database: "+message, Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(SettingsActivity.this, "Error uploading image database: " + message, Toast.LENGTH_SHORT).show();
                                     }
                                 });
                     } else {
                         String message = task.getException().toString();
-                        Toast.makeText(SettingsActivity.this, "Error uploading image database "+message, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(SettingsActivity.this, "Error uploading image database " + message, Toast.LENGTH_SHORT).show();
                     }
                 });
             }
         }
     }
 
+    private void saveDisplayName(String displayName) {
+        FirebaseUser user = fireAuth.getCurrentUser();
+
+        if (user != null) {
+            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setDisplayName(displayName)
+                    .build();
+
+            user.updateProfile(profileUpdates)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d("FlashChat", "User name updated.");
+                        }
+                    });
+        }
+
+    }
 }
