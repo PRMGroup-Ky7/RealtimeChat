@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Enter Group Name :");
 
         final EditText groupNameField = new EditText(MainActivity.this);
-        groupNameField.setWidth(50);
         groupNameField.setHint("e.g PRM Group");
         builder.setView(groupNameField);
 
