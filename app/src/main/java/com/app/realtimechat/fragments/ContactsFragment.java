@@ -99,7 +99,7 @@ public class ContactsFragment extends Fragment {
 
                                     holder.usernameView.setText(username);
                                     holder.userStatusView.setText(userStatus);
-                                    Picasso.get().load(userImage).into(holder.onlineIconView);
+                                    Picasso.get().load(userImage).into(holder.profileImageView);
                                 } else {
                                     String username = snapshot.child("name").getValue().toString();
                                     String userStatus = snapshot.child("status").getValue().toString();
@@ -120,7 +120,7 @@ public class ContactsFragment extends Fragment {
                 @NonNull
                 @Override
                 public ContactsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                    View view = LayoutInflater.from(getContext()).inflate(R.layout.users_display_layout, parent, false);
+                    View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.users_display_layout, parent, false);
                     ContactsViewHolder contactsViewHolder = new ContactsViewHolder(view);
                     return contactsViewHolder;
                 }
