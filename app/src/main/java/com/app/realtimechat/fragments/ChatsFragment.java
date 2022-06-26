@@ -91,36 +91,23 @@ public class ChatsFragment extends Fragment {
                             holder.userStatus.setText(retStatus);
 
                             if (snapshot.child("userState").hasChild("state")) {
+                                String currentDatetime = snapshot.child("userState").child("currentDatetime").getValue().toString();
                                 String state = snapshot.child("userState").child("state").getValue().toString();
-//                                String date = snapshot.child("userState").child("date").getValue().toString();
-//                                String time = snapshot.child("userState").child("time").getValue().toString();
                                 if (state.equals("online")) {
                                     holder.userStatus.setText("online");
                                 } else if (state.equals("offline")) {
-//                                    holder.userStatus.setText("Last seen: " + date + " " + time);
+                                    holder.userStatus.setText("Last seen: " + currentDatetime);
                                 }
                             } else {
                                 holder.userStatus.setText("offline");
                             }
 
                             holder.itemView.setOnClickListener(v -> {
-                                CharSequence[] options = new CharSequence[]{"Open Profile", "Send Message"};
-                                androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(getContext());
-                                builder.setTitle("Select Options");
-                                builder.setItems(options, (dialog, which) -> {
-                                    if (which == 0) {
-                                        // Open Profile
-//                                        Intent profileIntent = new Intent(getContext(), ProfileActivity.class);
-//                                        profileIntent.putExtra("visit_user_id", usersIDs);
-//                                        startActivity(profileIntent);
-                                    } else if (which == 1) {
-                                        Intent chatIntent = new Intent(getContext(), ChatActivity.class);
-                                        chatIntent.putExtra("visit_user_id", usersIDs);
-                                        chatIntent.putExtra("visit_user_name", retName);
-                                        chatIntent.putExtra("visit_image", retImage[0]);
-                                        startActivity(chatIntent);
-                                    }
-                                });
+                                Intent chatIntent = new Intent(getContext(), ChatActivity.class);
+                                chatIntent.putExtra("visit_user_id", usersIDs);
+                                chatIntent.putExtra("visit_user_name", retName);
+                                chatIntent.putExtra("visit_image", retImage[0]);
+                                startActivity(chatIntent);
                             });
                         }
                     }

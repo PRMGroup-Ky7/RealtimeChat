@@ -39,9 +39,9 @@ import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +51,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class ChatActivity extends AppCompatActivity {
 
     private final List<Messages> messagesList = new ArrayList<>();
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YYYY - hh:mm a");
+    private final LocalDateTime now = LocalDateTime.now();
     private String checker = "";
     private String myUrl = "";
     private String messageReceiverID, messageReceiverName, messageReceiverImage, messageSenderID;
@@ -64,7 +66,6 @@ public class ChatActivity extends AppCompatActivity {
     private LinearLayoutManager mLinearLayoutManager;
     private MessageAdapter mMessageAdapter;
     private RecyclerView userMessagesList;
-    private String saveCurrentTime, saveCurrentDate;
     private Uri fileUri;
     private StorageTask uploadTask;
     private ProgressDialog loadingBar;
@@ -193,14 +194,6 @@ public class ChatActivity extends AppCompatActivity {
         userMessagesList.setLayoutManager(mLinearLayoutManager);
         userMessagesList.setAdapter(mMessageAdapter);
         loadingBar = new ProgressDialog(this);
-
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd, yyyy");
-        saveCurrentDate = currentDate.format(calendar.getTime());
-
-        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
-        saveCurrentTime = currentTime.format(calendar.getTime());
     }
 
     private void sendMessage() {
@@ -223,8 +216,7 @@ public class ChatActivity extends AppCompatActivity {
             messageTextBody.put("from", messageSenderID);
             messageTextBody.put("to", messageReceiverID);
             messageTextBody.put("messageID", messagePushID);
-            messageTextBody.put("time", saveCurrentTime);
-            messageTextBody.put("date", saveCurrentDate);
+            messageTextBody.put("currentDatetime", dtf.format(now));
 
             Map messageBodyDetails = new HashMap();
             messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
@@ -285,8 +277,7 @@ public class ChatActivity extends AppCompatActivity {
                         messageTextBody.put("from", messageSenderID);
                         messageTextBody.put("to", messageReceiverID);
                         messageTextBody.put("messageID", messagePushID);
-                        messageTextBody.put("time", saveCurrentTime);
-                        messageTextBody.put("date", saveCurrentDate);
+                        messageTextBody.put("currentDatetime", dtf.format(now));
 
                         Map messageBodyDetails = new HashMap();
                         messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
@@ -323,8 +314,7 @@ public class ChatActivity extends AppCompatActivity {
                         messageTextBody.put("from", messageSenderID);
                         messageTextBody.put("to", messageReceiverID);
                         messageTextBody.put("messageID", messagePushID);
-                        messageTextBody.put("time", saveCurrentTime);
-                        messageTextBody.put("date", saveCurrentDate);
+                        messageTextBody.put("currentDatetime", dtf.format(now));
 
                         Map messageBodyDetails = new HashMap();
                         messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
@@ -357,14 +347,13 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.child("userState").hasChild("state")) {
+                            String currentDatetime = dataSnapshot.child("userState").child("currentDatetime").getValue().toString();
                             String state = dataSnapshot.child("userState").child("state").getValue().toString();
-                            String date = dataSnapshot.child("userState").child("date").getValue().toString();
-                            String time = dataSnapshot.child("userState").child("time").getValue().toString();
 
                             if (state.equals("online")) {
                                 userLastSeen.setText("online");
                             } else if (state.equals("offline")) {
-                                userLastSeen.setText("Last Seen: " + date + " " + time);
+                                userLastSeen.setText("Last Seen: " + currentDatetime);
                             }
                         } else {
                             userLastSeen.setText("offline");

@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         super.onOptionsItemSelected(item);
         switch (item.getItemId()) {
             case R.id.main_logout_option:
+                updateUserStatus("offline");
                 mAuth.signOut();
                 sendUserToLoginActivity();
                 break;
