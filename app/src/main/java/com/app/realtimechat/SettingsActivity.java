@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -25,7 +26,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StorageTask;
+import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -46,6 +50,7 @@ public class SettingsActivity extends AppCompatActivity {
     private FirebaseAuth fireAuth;
     private DatabaseReference dbRef;
     private StorageReference storageRef;
+    private StorageTask uploadTask;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,10 +74,10 @@ public class SettingsActivity extends AppCompatActivity {
         updateButton.setOnClickListener(v -> forwardUpdateToDatabase());
 
         editProfileImageView.setOnClickListener(v -> {
-            Intent galleryIntent = new Intent();
-            galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
-            galleryIntent.setType("image/*");
-            startActivityForResult(galleryIntent, GALLERY_PICK);
+            CropImage.activity()
+                    .setGuidelines(CropImageView.Guidelines.ON)
+                    .setAspectRatio(1, 1)
+                    .start(this);
         });
     }
 
@@ -164,15 +169,6 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == GALLERY_PICK && resultCode == RESULT_OK && data != null) {
-
-            CropImage.activity()
-                    .setGuidelines(CropImageView.Guidelines.ON)
-                    .setAspectRatio(1, 1)
-                    .start(this);
-        }
-
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
 
@@ -190,15 +186,24 @@ public class SettingsActivity extends AppCompatActivity {
                                 .child("Profile Images")
                                 .child(currentUserId + ".jpg");
 
-                imageProfileRef.putFile(resultUri).addOnCompleteListener(task -> {
+                uploadTask = imageProfileRef.putFile(resultUri);
+                uploadTask.addOnProgressListener((OnProgressListener<UploadTask.TaskSnapshot>) snapshot -> {
+                    double progress = (snapshot.getBytesTransferred() / snapshot.getTotalByteCount()) * 100;
+                    loadingBar.setMessage((int) progress + "% uploading...");
+                }).continueWithTask(task -> {
+                    if (!task.isSuccessful()) {
+                        throw task.getException();
+                    }
+                    return imageProfileRef.getDownloadUrl();
+                }).addOnCompleteListener((OnCompleteListener<Uri>) task -> {
                     if (task.isSuccessful()) {
-                        final String downloadUrl = task.getResult().getStorage().getDownloadUrl().toString();
+                        Uri downloadUrl = task.getResult();
                         dbRef.child("Users").child(currentUserId).child("image")
-                                .setValue(downloadUrl)
+                                .setValue(downloadUrl.toString())
                                 .addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
                                         loadingBar.dismiss();
-                                        Picasso.get().load(downloadUrl).into(editProfileImageView);
+                                        Picasso.get().load(downloadUrl.toString()).into(editProfileImageView);
                                         Toast.makeText(SettingsActivity.this, "Profile image uploaded successfully", Toast.LENGTH_SHORT).show();
 
                                     } else {
