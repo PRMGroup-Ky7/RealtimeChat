@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +21,8 @@ import com.app.realtimechat.entities.ContactRequest;
 import com.app.realtimechat.utils.Constants;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,7 +44,7 @@ public class RequestFragment extends Fragment {
     private FirebaseAuth mAuth;
     private String currentUserID;
 
-    private DatabaseReference usersRef, ContactsRef, contactRequestsReference;
+    private DatabaseReference usersReference, contactReference, contactRequestsReference;
 
     public RequestFragment() {
 
@@ -55,8 +58,9 @@ public class RequestFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         currentUserID = mAuth.getCurrentUser().getUid();
 
+        contactReference = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_CONTACTS);
         contactRequestsReference =  FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_REQUEST);
-        usersRef = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
+        usersReference = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
 
         myRequestList = requestFragmentView.findViewById(R.id.chat_requests_list);
         myRequestList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -74,12 +78,12 @@ public class RequestFragment extends Fragment {
                         .build();
         FirebaseRecyclerAdapter<ContactRequest,RequestViewHolder> adapter = new FirebaseRecyclerAdapter<ContactRequest, RequestViewHolder>(options) {
             @Override
-            protected void onBindViewHolder(@NonNull RequestViewHolder holder, int position, @NonNull ContactRequest model) {
+            protected void onBindViewHolder(@NonNull RequestViewHolder holder, int position, @NonNull ContactRequest visitedUser) {
 
-                String userID = getRef(position).getKey();
-                Log.i("TAG", model.getRequestType());
-                String requestType = model.getRequestType();
-                usersRef.child(userID).addValueEventListener(new ValueEventListener() {
+                visitedUser.setUid(getRef(position).getKey());
+                Log.i("TAG", visitedUser.getRequestType());
+                String requestType = visitedUser.getRequestType();
+                usersReference.child(visitedUser.getUid()).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()){
@@ -99,6 +103,19 @@ public class RequestFragment extends Fragment {
 
                                 holder.acceptButton.setVisibility(View.VISIBLE);
                                 holder.cancelButton.setVisibility(View.VISIBLE);
+                                holder.acceptButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        acceptContactRequest(currentUserID,visitedUser.getUid());
+                                    }
+                                });
+
+                                holder.cancelButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        cancelContactRequest(currentUserID,visitedUser.getUid());
+                                    }
+                                });
 
                             } else if (requestType.equals("request_sent")){
                                 holder.acceptButton.setVisibility(View.VISIBLE);
@@ -115,6 +132,11 @@ public class RequestFragment extends Fragment {
 
 
 
+            }
+
+            @NonNull
+            private FirebaseRecyclerAdapter<ContactRequest, RequestViewHolder> getFirebaseRecyclerAdapter() {
+                return this;
             }
 
             @NonNull
@@ -144,7 +166,74 @@ public class RequestFragment extends Fragment {
             acceptButton = itemView.findViewById(R.id.request_accept_btn);
             cancelButton = itemView.findViewById(R.id.request_cancel_btn);
         }
+
+
     }
+    private void cancelContactRequest(String currentUserId, String visitedUserId) {
+
+        contactRequestsReference.child(currentUserId)
+                .child(visitedUserId)
+                .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            contactRequestsReference.child(visitedUserId)
+                                    .child(currentUserId)
+                                    .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(getContext(), "Contact request rejected", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
+    }
+
+    private void acceptContactRequest(String currentUserId, String visitedUserId) {
+
+        contactReference.child(currentUserId)
+                .child(visitedUserId)
+                .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            contactReference.child(visitedUserId)
+                                    .child(currentUserId)
+                                    .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()){
+                                                contactRequestsReference.child(currentUserId)
+                                                        .child(visitedUserId)
+                                                        .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<Void> task) {
+                                                                if (task.isSuccessful()){
+                                                                    contactRequestsReference.child(visitedUserId)
+                                                                            .child(currentUserId)
+                                                                            .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                                @Override
+                                                                                public void onComplete(@NonNull Task<Void> task) {
+                                                                                    if (task.isSuccessful()) {
+                                                                                        Toast.makeText(getContext(), "New Contact Saved", Toast.LENGTH_SHORT).show();
+                                                                                    }
+                                                                                }
+                                                                            });
+                                                                }
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    });
+                        }
+
+                    }
+                });
+    }
+
 }
 
 
