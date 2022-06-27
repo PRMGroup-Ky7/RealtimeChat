@@ -1,6 +1,7 @@
 package com.app.realtimechat.fragments;
 
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -113,13 +114,35 @@ public class RequestFragment extends Fragment {
                                 holder.cancelButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        cancelContactRequest(currentUserID,requestInfo.getReceivedUserUid());
+                                        cancelContactRequest(currentUserID,requestInfo.getReceivedUserUid(),1);
                                     }
                                 });
 
                             } else if (requestType.equals("request_sent")){
                                 holder.acceptButton.setVisibility(View.VISIBLE);
                                 holder.acceptButton.setText("Req sent");
+
+                                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        CharSequence[] options = new CharSequence[]
+                                                {
+                                                        "Cancel Chat Request"
+                                                };
+
+                                        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+                                        builder.setTitle("Already Sent Request");
+                                        builder.setItems(options, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int i) {
+                                                if (i == 0) {
+                                                    cancelContactRequest(currentUserID,requestInfo.getReceivedUserUid(),0);
+                                                }
+                                            }
+                                        });
+                                        builder.show();
+                                    }
+                                });
                             }
                         }
                     }
@@ -169,7 +192,7 @@ public class RequestFragment extends Fragment {
 
 
     }
-    private void cancelContactRequest(String senderUid, String receiverUid) {
+    private void cancelContactRequest(String senderUid, String receiverUid, int mode) {
 
         contactRequestsReference.child(senderUid)
                 .child(receiverUid)
@@ -183,7 +206,12 @@ public class RequestFragment extends Fragment {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if (task.isSuccessful()) {
-                                                Toast.makeText(getContext(), "Contact request rejected", Toast.LENGTH_SHORT).show();
+                                                if (mode==1){
+                                                    Toast.makeText(getContext(), "Contact request rejected", Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    Toast.makeText(getContext(), "Contact request cancelled", Toast.LENGTH_SHORT).show();
+                                                }
+
                                             }
                                         }
                                     });
