@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.realtimechat.R;
-import com.app.realtimechat.entities.ContactRequest;
+import com.app.realtimechat.entities.RequestInfo;
 import com.app.realtimechat.utils.Constants;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -72,18 +72,18 @@ public class RequestFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
-        FirebaseRecyclerOptions<ContactRequest> options =
-                new FirebaseRecyclerOptions.Builder<ContactRequest>()
-                        .setQuery(contactRequestsReference.child(currentUserID), ContactRequest.class)
+        FirebaseRecyclerOptions<RequestInfo> options =
+                new FirebaseRecyclerOptions.Builder<RequestInfo>()
+                        .setQuery(contactRequestsReference.child(currentUserID), RequestInfo.class)
                         .build();
-        FirebaseRecyclerAdapter<ContactRequest,RequestViewHolder> adapter = new FirebaseRecyclerAdapter<ContactRequest, RequestViewHolder>(options) {
+        FirebaseRecyclerAdapter<RequestInfo,RequestViewHolder> adapter = new FirebaseRecyclerAdapter<RequestInfo, RequestViewHolder>(options) {
             @Override
-            protected void onBindViewHolder(@NonNull RequestViewHolder holder, int position, @NonNull ContactRequest visitedUser) {
+            protected void onBindViewHolder(@NonNull RequestViewHolder holder, int position, @NonNull RequestInfo requestInfo) {
 
-                visitedUser.setUid(getRef(position).getKey());
-                Log.i("TAG", visitedUser.getRequestType());
-                String requestType = visitedUser.getRequestType();
-                usersReference.child(visitedUser.getUid()).addValueEventListener(new ValueEventListener() {
+                requestInfo.setReceivedUserUid(getRef(position).getKey());
+                Log.i("TAG", requestInfo.getRequestType());
+                String requestType = requestInfo.getRequestType();
+                usersReference.child(requestInfo.getReceivedUserUid()).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()){
@@ -106,14 +106,14 @@ public class RequestFragment extends Fragment {
                                 holder.acceptButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        acceptContactRequest(currentUserID,visitedUser.getUid());
+                                        acceptContactRequest(currentUserID,requestInfo.getReceivedUserUid());
                                     }
                                 });
 
                                 holder.cancelButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        cancelContactRequest(currentUserID,visitedUser.getUid());
+                                        cancelContactRequest(currentUserID,requestInfo.getReceivedUserUid());
                                     }
                                 });
 
@@ -135,7 +135,7 @@ public class RequestFragment extends Fragment {
             }
 
             @NonNull
-            private FirebaseRecyclerAdapter<ContactRequest, RequestViewHolder> getFirebaseRecyclerAdapter() {
+            private FirebaseRecyclerAdapter<RequestInfo, RequestViewHolder> getFirebaseRecyclerAdapter() {
                 return this;
             }
 
@@ -169,16 +169,16 @@ public class RequestFragment extends Fragment {
 
 
     }
-    private void cancelContactRequest(String currentUserId, String visitedUserId) {
+    private void cancelContactRequest(String senderUid, String receiverUid) {
 
-        contactRequestsReference.child(currentUserId)
-                .child(visitedUserId)
+        contactRequestsReference.child(senderUid)
+                .child(receiverUid)
                 .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if(task.isSuccessful()){
-                            contactRequestsReference.child(visitedUserId)
-                                    .child(currentUserId)
+                            contactRequestsReference.child(receiverUid)
+                                    .child(senderUid)
                                     .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
@@ -192,28 +192,28 @@ public class RequestFragment extends Fragment {
                 });
     }
 
-    private void acceptContactRequest(String currentUserId, String visitedUserId) {
+    private void acceptContactRequest(String senderUid, String receiverUid) {
 
-        contactReference.child(currentUserId)
-                .child(visitedUserId)
+        contactReference.child(senderUid)
+                .child(receiverUid)
                 .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if(task.isSuccessful()){
-                            contactReference.child(visitedUserId)
-                                    .child(currentUserId)
+                            contactReference.child(receiverUid)
+                                    .child(senderUid)
                                     .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if (task.isSuccessful()){
-                                                contactRequestsReference.child(currentUserId)
-                                                        .child(visitedUserId)
+                                                contactRequestsReference.child(senderUid)
+                                                        .child(receiverUid)
                                                         .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                                             @Override
                                                             public void onComplete(@NonNull Task<Void> task) {
                                                                 if (task.isSuccessful()){
-                                                                    contactRequestsReference.child(visitedUserId)
-                                                                            .child(currentUserId)
+                                                                    contactRequestsReference.child(receiverUid)
+                                                                            .child(senderUid)
                                                                             .child("requestType").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                                                                 @Override
                                                                                 public void onComplete(@NonNull Task<Void> task) {
