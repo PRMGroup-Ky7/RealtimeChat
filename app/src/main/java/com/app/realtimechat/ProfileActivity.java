@@ -195,6 +195,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void acceptContactRequest() {
+
         contactReference.child(currentUserId)
                 .child(visitedUserId)
                 .child("Contacts").setValue("Saved").addOnCompleteListener(new OnCompleteListener<Void>() {
