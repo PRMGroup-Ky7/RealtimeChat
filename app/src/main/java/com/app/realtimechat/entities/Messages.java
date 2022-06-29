@@ -1,9 +1,32 @@
 package com.app.realtimechat.entities;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Messages {
+
     private String from, message, type, to, messageID, currentDatetime, name;
 
     public Messages() {
+    }
+
+    public Messages(String from, String message, String type, String to, String messageID, String currentDatetime) {
+        this.from = from;
+        this.message = message;
+        this.type = type;
+        this.to = to;
+        this.messageID = messageID;
+        this.currentDatetime = currentDatetime;
+    }
+
+    public Messages(String from, String message, String type, String to, String messageID, String currentDatetime, String name) {
+        this.from = from;
+        this.message = message;
+        this.type = type;
+        this.to = to;
+        this.messageID = messageID;
+        this.currentDatetime = currentDatetime;
+        this.name = name;
     }
 
     public String getFrom() {
@@ -46,6 +69,13 @@ public class Messages {
         this.messageID = messageID;
     }
 
+    public String getCurrentDatetime() {
+        return currentDatetime;
+    }
+
+    public void setCurrentDatetime(String currentDatetime) {
+        this.currentDatetime = currentDatetime;
+    }
 
     public String getName() {
         return name;
@@ -55,11 +85,14 @@ public class Messages {
         this.name = name;
     }
 
-    public String getCurrentDatetime() {
-        return currentDatetime;
-    }
-
-    public void setCurrentDatetime(String currentDatetime) {
-        this.currentDatetime = currentDatetime;
+    public Map getMessagesBody() {
+        Map messageTextBody = new HashMap();
+        messageTextBody.put("message", getMessage());
+        messageTextBody.put("type", getType());
+        messageTextBody.put("from", getFrom());
+        messageTextBody.put("to", getTo());
+        messageTextBody.put("messageID", getMessageID());
+        messageTextBody.put("currentDatetime", getCurrentDatetime());
+        return messageTextBody;
     }
 }
