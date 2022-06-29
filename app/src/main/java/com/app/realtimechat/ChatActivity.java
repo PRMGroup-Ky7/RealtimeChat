@@ -88,45 +88,12 @@ public class ChatActivity extends AppCompatActivity {
         userName.setText(messageReceiverName);
         Picasso.get().load(messageReceiverImage).placeholder(R.drawable.profile_image).into(userImage);
 
-        sendMessageButton.setOnClickListener(v -> sendMessage());
-
         displayLastSeen();
 
+        sendMessageButton.setOnClickListener(v -> sendMessage());
+
         sendFileButton.setOnClickListener(v -> {
-            CharSequence[] options = new CharSequence[]{
-                    "Image", "PDF File", "MS Word Files"
-            };
-            AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
-            builder.setTitle("Select the File");
-            builder.setItems(options, (dialog, i) -> {
-                switch (i) {
-                    case 0: {
-                        checker = "image";
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_GET_CONTENT);
-                        intent.setType("image/*");
-                        startActivityForResult(Intent.createChooser(intent, "Select image"), 438);
-                        break;
-                    }
-                    case 1: {
-                        checker = "pdf";
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_GET_CONTENT);
-                        intent.setType("application/pdf");
-                        startActivityForResult(Intent.createChooser(intent, "Select PDF file"), 438);
-                        break;
-                    }
-                    case 2: {
-                        checker = "docx";
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_GET_CONTENT);
-                        intent.setType("application/msword");
-                        startActivityForResult(Intent.createChooser(intent, "Select MS Word file"), 438);
-                        break;
-                    }
-                }
-            });
-            builder.show();
+            openFileDialog();
         });
 
     }
@@ -134,14 +101,14 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        rootRef.child(Constants.CHILD_MESSAGES).child(messageSenderID).child(messageReceiverID)
+        rootRef.child(Constants.CHILD_MESSAGES)
+                .child(messageSenderID)
+                .child(messageReceiverID)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                         Messages messages = dataSnapshot.getValue(Messages.class);
-
                         messagesList.add(messages);
-
                         mMessageAdapter.notifyDataSetChanged();
                     }
 
@@ -165,6 +132,41 @@ public class ChatActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+    private void runActivityResult(String type, String title) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType(type);
+        startActivityForResult(Intent.createChooser(intent, title), 438);
+    }
+
+    private void openFileDialog() {
+        CharSequence[] options = new CharSequence[]{
+                "Image", "PDF File", "MS Word Files"
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+        builder.setTitle("Select the File");
+        builder.setItems(options, (dialog, i) -> {
+            switch (i) {
+                case 0: {
+                    checker = "image";
+                    runActivityResult("image/*", "Select image");
+                    break;
+                }
+                case 1: {
+                    checker = "pdf";
+                    runActivityResult("application/pdf", "Select PDF file");
+                    break;
+                }
+                case 2: {
+                    checker = "docx";
+                    runActivityResult("application/msword", "Select MS Word file");
+                    break;
+                }
+            }
+        });
+        builder.show();
     }
 
     private void intializeControllers() {
@@ -193,7 +195,12 @@ public class ChatActivity extends AppCompatActivity {
         mLinearLayoutManager = new LinearLayoutManager(this);
         userMessagesList.setLayoutManager(mLinearLayoutManager);
         userMessagesList.setAdapter(mMessageAdapter);
+
         loadingBar = new ProgressDialog(this);
+        loadingBar.setProgressDrawable(getDrawable(R.drawable.spinner));
+        loadingBar.setTitle("Sending File");
+        loadingBar.setMessage("Please wait, uploading your image.");
+        loadingBar.setCanceledOnTouchOutside(false);
     }
 
     private void sendMessage() {
@@ -209,29 +216,23 @@ public class ChatActivity extends AppCompatActivity {
                     .child(messageSenderID).child(messageReceiverID).push();
 
             String messagePushID = userMessageKeyRef.getKey();
+            Messages messages = new Messages(messageSenderID, messageText, "text", messageReceiverID, messagePushID, dtf.format(now));
+            Map<String, String> messageTextBody = messages.getMessagesBody();
 
-            Map messageTextBody = new HashMap();
-            messageTextBody.put("message", messageText);
-            messageTextBody.put("type", "text");
-            messageTextBody.put("from", messageSenderID);
-            messageTextBody.put("to", messageReceiverID);
-            messageTextBody.put("messageID", messagePushID);
-            messageTextBody.put("currentDatetime", dtf.format(now));
-
-            Map messageBodyDetails = new HashMap();
+            Map<String, Object> messageBodyDetails = new HashMap<>();
             messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
             messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
 
-            rootRef.updateChildren(messageBodyDetails).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    Toast.makeText(ChatActivity.this, "Message Sent.", Toast.LENGTH_SHORT).show();
-                } else {
-                    String message = task.getException().getMessage();
-                    Toast.makeText(ChatActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-                }
-                messageInputText.setText("");
-
-            });
+            rootRef.updateChildren(messageBodyDetails)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(ChatActivity.this, "Message Sent.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            String message = task.getException().getMessage();
+                            Toast.makeText(ChatActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                        messageInputText.setText("");
+                    });
         }
 
     }
@@ -240,12 +241,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 438 && resultCode == RESULT_OK && data != null && data.getData() != null) {
-
-            loadingBar.setTitle("Sending File");
-            loadingBar.setMessage("Please wait, uploading your image.");
-            loadingBar.setCanceledOnTouchOutside(false);
             loadingBar.show();
-
             fileUri = data.getData();
             if (!checker.equals("image")) {
                 StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("Image Files");
@@ -270,16 +266,10 @@ public class ChatActivity extends AppCompatActivity {
                 }).addOnCompleteListener((OnCompleteListener<Uri>) task -> {
                     if (task.isSuccessful()) {
                         Uri downloadUri = task.getResult();
-                        Map messageTextBody = new HashMap();
-                        messageTextBody.put("message", downloadUri.toString());
-                        messageTextBody.put("name", fileUri.getLastPathSegment());
-                        messageTextBody.put("type", checker);
-                        messageTextBody.put("from", messageSenderID);
-                        messageTextBody.put("to", messageReceiverID);
-                        messageTextBody.put("messageID", messagePushID);
-                        messageTextBody.put("currentDatetime", dtf.format(now));
+                        Messages messages = new Messages(messageSenderID, downloadUri.toString(), checker, messageReceiverID, messagePushID, dtf.format(now));
+                        Map<String, String> messageTextBody = messages.getMessagesBody();
 
-                        Map messageBodyDetails = new HashMap();
+                        Map<String, Object> messageBodyDetails = new HashMap<>();
                         messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
                         messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
 
@@ -307,30 +297,27 @@ public class ChatActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         Uri downloadUri = task.getResult();
                         myUrl = downloadUri.toString();
-                        Map messageTextBody = new HashMap();
-                        messageTextBody.put("message", myUrl);
-                        messageTextBody.put("name", fileUri.getLastPathSegment());
-                        messageTextBody.put("type", checker);
-                        messageTextBody.put("from", messageSenderID);
-                        messageTextBody.put("to", messageReceiverID);
-                        messageTextBody.put("messageID", messagePushID);
-                        messageTextBody.put("currentDatetime", dtf.format(now));
 
-                        Map messageBodyDetails = new HashMap();
+                        Messages messages = new Messages(messageSenderID, myUrl, checker, messageReceiverID, messagePushID, dtf.format(now), fileUri.getLastPathSegment());
+                        Map<String, String> messageTextBody = messages.getMessagesBody();
+
+                        Map<String, Object> messageBodyDetails = new HashMap<>();
+
                         messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
                         messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
 
-                        rootRef.updateChildren(messageBodyDetails).addOnCompleteListener(task1 -> {
-                            if (task1.isSuccessful()) {
-                                loadingBar.dismiss();
-                                Toast.makeText(ChatActivity.this, "Message Sent.", Toast.LENGTH_SHORT).show();
-                            } else {
-                                loadingBar.dismiss();
-                                String message = task1.getException().getMessage();
-                                Toast.makeText(ChatActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-                            }
-                            messageInputText.setText("");
-                        });
+                        rootRef.updateChildren(messageBodyDetails)
+                                .addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        loadingBar.dismiss();
+                                        Toast.makeText(ChatActivity.this, "Message Sent.", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        loadingBar.dismiss();
+                                        String message = task1.getException().getMessage();
+                                        Toast.makeText(ChatActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                                    }
+                                    messageInputText.setText("");
+                                });
 
                     }
                 });
@@ -342,19 +329,15 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void displayLastSeen() {
-        rootRef.child(Constants.CHILD_USERS).child(messageReceiverID)
+        rootRef.child(Constants.CHILD_USERS)
+                .child(messageReceiverID)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.child("userState").hasChild("state")) {
                             String currentDatetime = dataSnapshot.child("userState").child("currentDatetime").getValue().toString();
                             String state = dataSnapshot.child("userState").child("state").getValue().toString();
-
-                            if (state.equals("online")) {
-                                userLastSeen.setText("online");
-                            } else if (state.equals("offline")) {
-                                userLastSeen.setText("Last Seen: " + currentDatetime);
-                            }
+                            userLastSeen.setText(state.equals("online") ? "online" : "Last Seen: " + currentDatetime);
                         } else {
                             userLastSeen.setText("offline");
                         }

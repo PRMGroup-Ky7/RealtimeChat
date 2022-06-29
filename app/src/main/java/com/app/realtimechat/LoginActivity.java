@@ -1,8 +1,10 @@
 package com.app.realtimechat;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -11,18 +13,13 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.app.realtimechat.utils.Constants;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference userRef;
-
     private ProgressDialog loadingBar;
     private Button loginButton;
     private EditText etEmail, etPassword;
@@ -35,7 +32,6 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        userRef = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_USERS);
 
         initializeFields();
 
@@ -53,7 +49,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (currentUser != null) {
-            sendUserToMainActivity();
+            switchActivity(LoginActivity.this, MainActivity.class);
         }
     }
 
@@ -62,14 +58,19 @@ public class LoginActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.login_email);
         etPassword = findViewById(R.id.login_password);
         tvNewAccountLink = findViewById(R.id.need_new_account_link);
+
         loadingBar = new ProgressDialog(this);
+        loadingBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        loadingBar.setTitle("Login");
+        loadingBar.setMessage("Please wait while we are checking your credentials");
+        loadingBar.setCanceledOnTouchOutside(false);
     }
 
     private void allowUserToLogin() {
         String email = etEmail.getText().toString();
         String password = etPassword.getText().toString();
 
-        if (email.isEmpty() | password.isEmpty()) {
+        if (TextUtils.isEmpty(email) | TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Please fill all the fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -80,27 +81,22 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        loadingBar.setTitle("Login");
-        loadingBar.setMessage("Please wait while we are checking your credentials");
-        loadingBar.setCanceledOnTouchOutside(false);
         loadingBar.show();
 
-        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                sendUserToMainActivity();
-                Toast.makeText(LoginActivity.this, "Logged in Successful...", Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
-            } else {
-                String message = task.getException().toString();
-                Toast.makeText(LoginActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
-            }
-        });
-
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        switchActivity(LoginActivity.this, MainActivity.class);
+                        Toast.makeText(LoginActivity.this, R.string.success_login, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(LoginActivity.this, R.string.fail_login, Toast.LENGTH_SHORT).show();
+                    }
+                    loadingBar.dismiss();
+                });
     }
 
-    private void sendUserToMainActivity() {
-        Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
+    private <T> void switchActivity(Context context, Class<T> tClass) {
+        Intent mainIntent = new Intent(context, tClass);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(mainIntent);
         finish();

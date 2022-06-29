@@ -26,8 +26,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
@@ -158,7 +156,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void createNewGroup(final String groupName) {
-        rootRef.child(Constants.CHILD_GROUPS).child(groupName).setValue("")
+        rootRef.child(Constants.CHILD_GROUPS)
+                .child(groupName).setValue("")
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(MainActivity.this, groupName + " is created successfully.", Toast.LENGTH_SHORT).show();
@@ -194,17 +193,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateUserStatus(String state) {
-
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YYYY hh:mm a");
-        LocalDateTime now = LocalDateTime.now();
-
         HashMap<String, Object> onlineStateMap = new HashMap<>();
-        onlineStateMap.put("currentDatetime", dtf.format(now));
+        onlineStateMap.put("currentDatetime", Constants.getCurrentDatetime());
         onlineStateMap.put("state", state);
 
         FirebaseUser user = mAuth.getCurrentUser();
-        rootRef
-                .child(Constants.CHILD_USERS)
+        rootRef.child(Constants.CHILD_USERS)
                 .child(user.getUid())
                 .child("userState")
                 .updateChildren(onlineStateMap);
