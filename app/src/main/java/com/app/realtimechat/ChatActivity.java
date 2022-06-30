@@ -134,6 +134,12 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        messagesList.clear();
+    }
+
     private void runActivityResult(String type, String title) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);

@@ -97,6 +97,12 @@ public class GroupChatActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        displayTextMessages.setText("");
+    }
+
     private void initializeFields() {
         mToolbar = findViewById(R.id.group_chat_bar_layout);
         setSupportActionBar(mToolbar);

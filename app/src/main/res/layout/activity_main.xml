@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_below="@id/main_tabs_pager"
     android:background="@color/colorAccent"
     tools:context=".MainActivity">
 
@@ -30,9 +32,144 @@
         android:id="@+id/main_tabs_pager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/appBarLayout">
+        android:layout_below="@id/appBarLayout"
+        tools:ignore="SpeakableTextPresentCheck"></androidx.viewpager.widget.ViewPager>
 
-    </androidx.viewpager.widget.ViewPager>
+    <RelativeLayout
+        android:id="@+id/fab"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_alignParentBottom="true">
 
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="200dp"
+            android:layout_marginEnd="27dp"
+            android:gravity="bottom|end">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_find_friend"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="330dp"
+                android:backgroundTint="#FFFFFF"
+                android:clickable="true"
+                android:drawingCacheQuality="auto"
+                android:elevation="0dp"
+                android:visibility="invisible"
+                app:elevation="0dp"
+                app:fabCustomSize="45dp"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_crate_group"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="261dp"
+                android:backgroundTint="#FFFFFF"
+                android:clickable="true"
+                android:drawingCacheQuality="auto"
+                android:elevation="0dp"
+                android:visibility="invisible"
+                app:elevation="0dp"
+                app:fabCustomSize="45dp"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_settings"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="194dp"
+                android:backgroundTint="#FFFFFF"
+                android:clickable="true"
+                android:drawingCacheQuality="auto"
+                android:elevation="0dp"
+                android:visibility="invisible"
+                app:elevation="0dp"
+                app:fabCustomSize="45dp"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_logout"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="120dp"
+                android:backgroundTint="#FFFFFF"
+                android:clickable="true"
+                android:drawingCacheQuality="auto"
+                android:elevation="0dp"
+                android:visibility="invisible"
+                app:elevation="0dp"
+                app:fabCustomSize="45dp"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+
+            <TextView
+                android:id="@+id/tv_friend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="7dp"
+                android:layout_marginBottom="341dp"
+                android:layout_toStartOf="@+id/fab_find_friend"
+                android:text="Friends"
+                android:textColor="#000000"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/tv_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="277dp"
+                android:layout_toStartOf="@+id/fab_find_friend"
+                android:text="Group"
+                android:textColor="#000000"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/tv_setting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="209dp"
+                android:layout_toStartOf="@+id/fab_find_friend"
+                android:text="Setting"
+                android:textColor="#000000"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/tv_logout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="141dp"
+                android:layout_toStartOf="@+id/fab_find_friend"
+                android:text="Logout"
+                android:textColor="#000000"
+                android:visibility="invisible" />
+        </RelativeLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_main"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="50dp"
+            android:backgroundTint="#FFFFFF"
+            android:clickable="true"
+            android:elevation="0dp"
+            app:elevation="0dp"
+            app:srcCompat="@android:drawable/btn_star_big_on" />
+    </RelativeLayout>
 
 </RelativeLayout>
