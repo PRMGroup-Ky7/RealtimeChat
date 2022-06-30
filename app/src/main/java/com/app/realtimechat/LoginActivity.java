@@ -1,8 +1,6 @@
 package com.app.realtimechat;
 
 import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -13,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.app.realtimechat.utils.ActivityUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -24,13 +23,16 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton;
     private EditText etEmail, etPassword;
     private TextView tvNewAccountLink;
+    private ActivityUtil activityUtil;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_alt);
 
+        activityUtil = new ActivityUtil(LoginActivity.this);
         mAuth = FirebaseAuth.getInstance();
+        mAuth.signOut();
         currentUser = mAuth.getCurrentUser();
 
         initializeFields();
@@ -40,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         tvNewAccountLink.setOnClickListener(v -> {
-            sendUserToRegisterActivity();
+            activityUtil.switchActivity(LoginActivity.this, RegisterActivity.class);
         });
 
     }
@@ -49,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (currentUser != null) {
-            switchActivity(LoginActivity.this, MainActivity.class);
+            activityUtil.switchActivityWithFlag(LoginActivity.this, MainActivity.class);
         }
     }
 
@@ -60,7 +62,6 @@ public class LoginActivity extends AppCompatActivity {
         tvNewAccountLink = findViewById(R.id.need_new_account_link);
 
         loadingBar = new ProgressDialog(this);
-        loadingBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         loadingBar.setTitle("Login");
         loadingBar.setMessage("Please wait while we are checking your credentials");
         loadingBar.setCanceledOnTouchOutside(false);
@@ -86,25 +87,13 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        switchActivity(LoginActivity.this, MainActivity.class);
+                        activityUtil.switchActivityWithFlag(LoginActivity.this, MainActivity.class);
                         Toast.makeText(LoginActivity.this, R.string.success_login, Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(LoginActivity.this, R.string.fail_login, Toast.LENGTH_SHORT).show();
                     }
                     loadingBar.dismiss();
                 });
-    }
-
-    private <T> void switchActivity(Context context, Class<T> tClass) {
-        Intent mainIntent = new Intent(context, tClass);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(mainIntent);
-        finish();
-    }
-
-    private void sendUserToRegisterActivity() {
-        Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
-        startActivity(registerIntent);
     }
 
 }
