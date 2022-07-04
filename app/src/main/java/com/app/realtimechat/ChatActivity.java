@@ -1,5 +1,6 @@
 package com.app.realtimechat;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -21,12 +22,13 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.app.realtimechat.adapters.MessageAdapter;
+import com.app.realtimechat.adapters.MessagesAdapter;
 import com.app.realtimechat.entities.Messages;
 import com.app.realtimechat.utils.Constants;
+import com.app.realtimechat.utils.MyScrollToBottomObserver;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -41,16 +43,13 @@ import com.squareup.picasso.Picasso;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private final List<Messages> messagesList = new ArrayList<>();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YYYY - hh:mm a");
     private final LocalDateTime now = LocalDateTime.now();
     private String checker = "";
@@ -64,11 +63,11 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton sendMessageButton, sendFileButton;
     private EditText messageInputText;
     private LinearLayoutManager mLinearLayoutManager;
-    private MessageAdapter mMessageAdapter;
     private RecyclerView userMessagesList;
     private Uri fileUri;
     private StorageTask uploadTask;
     private ProgressDialog loadingBar;
+    private MessagesAdapter adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -95,152 +94,22 @@ public class ChatActivity extends AppCompatActivity {
         sendFileButton.setOnClickListener(v -> {
             openFileDialog();
         });
-
+        Toast.makeText(this, "onCreate", Toast.LENGTH_SHORT).show();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onStart() {
         super.onStart();
-        rootRef.child(Constants.CHILD_MESSAGES)
-                .child(messageSenderID)
-                .child(messageReceiverID)
-                .addChildEventListener(new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                        Messages messages = dataSnapshot.getValue(Messages.class);
-                        messagesList.add(messages);
-                        mMessageAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                    }
-
-                    @Override
-                    public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                    }
-
-                    @Override
-                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
+        userMessagesList.getRecycledViewPool().clear();
+        adapter.notifyDataSetChanged();
+        adapter.startListening();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        messagesList.clear();
-    }
-
-    private void runActivityResult(String type, String title) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        intent.setType(type);
-        startActivityForResult(Intent.createChooser(intent, title), 438);
-    }
-
-    private void openFileDialog() {
-        CharSequence[] options = new CharSequence[]{
-                "Image", "PDF File", "MS Word Files"
-        };
-        AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
-        builder.setTitle("Select the File");
-        builder.setItems(options, (dialog, i) -> {
-            switch (i) {
-                case 0: {
-                    checker = "image";
-                    runActivityResult("image/*", "Select image");
-                    break;
-                }
-                case 1: {
-                    checker = "pdf";
-                    runActivityResult("application/pdf", "Select PDF file");
-                    break;
-                }
-                case 2: {
-                    checker = "docx";
-                    runActivityResult("application/msword", "Select MS Word file");
-                    break;
-                }
-            }
-        });
-        builder.show();
-    }
-
-    private void intializeControllers() {
-        chatToolBar = findViewById(R.id.chat_toolbar);
-        setSupportActionBar(chatToolBar);
-
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setDisplayShowCustomEnabled(true);
-
-        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View actionBarView = layoutInflater.inflate(R.layout.custom_chat_bar, null);
-        actionBar.setCustomView(actionBarView);
-
-        userImage = findViewById(R.id.custom_profile_image);
-        userName = findViewById(R.id.custom_profile_name);
-        userLastSeen = findViewById(R.id.custom_user_last_seen);
-
-        sendMessageButton = findViewById(R.id.send_message_btn);
-        sendFileButton = findViewById(R.id.send_files_btn);
-        messageInputText = findViewById(R.id.input_message);
-
-        mMessageAdapter = new MessageAdapter(messagesList);
-        userMessagesList = findViewById(R.id.private_messages_list_of_users);
-
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        userMessagesList.setLayoutManager(mLinearLayoutManager);
-        userMessagesList.setAdapter(mMessageAdapter);
-
-        loadingBar = new ProgressDialog(this);
-        loadingBar.setProgressDrawable(getDrawable(R.drawable.spinner));
-        loadingBar.setTitle("Sending File");
-        loadingBar.setMessage("Please wait, uploading your image.");
-        loadingBar.setCanceledOnTouchOutside(false);
-    }
-
-    private void sendMessage() {
-        String messageText = messageInputText.getText().toString();
-
-        if (TextUtils.isEmpty(messageText)) {
-            Toast.makeText(this, "Please type a message.", Toast.LENGTH_SHORT).show();
-        } else {
-            String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
-            String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
-
-            DatabaseReference userMessageKeyRef = rootRef.child("Messages")
-                    .child(messageSenderID).child(messageReceiverID).push();
-
-            String messagePushID = userMessageKeyRef.getKey();
-            Messages messages = new Messages(messageSenderID, messageText, "text", messageReceiverID, messagePushID, dtf.format(now));
-            Map<String, String> messageTextBody = messages.getMessagesBody();
-
-            Map<String, Object> messageBodyDetails = new HashMap<>();
-            messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
-            messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
-
-            rootRef.updateChildren(messageBodyDetails)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(ChatActivity.this, "Message Sent.", Toast.LENGTH_SHORT).show();
-                        } else {
-                            String message = task.getException().getMessage();
-                            Toast.makeText(ChatActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
-                        }
-                        messageInputText.setText("");
-                    });
-        }
-
+        adapter.stopListening();
     }
 
     @Override
@@ -332,6 +201,116 @@ public class ChatActivity extends AppCompatActivity {
                 Toast.makeText(this, "Nothing selected", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+
+    private void runActivityResult(String type, String title) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType(type);
+        startActivityForResult(Intent.createChooser(intent, title), 438);
+    }
+
+    private void openFileDialog() {
+        CharSequence[] options = new CharSequence[]{
+                "Image", "PDF File", "MS Word Files"
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+        builder.setTitle("Select the File");
+        builder.setItems(options, (dialog, i) -> {
+            switch (i) {
+                case 0: {
+                    checker = "image";
+                    runActivityResult("image/*", "Select image");
+                    break;
+                }
+                case 1: {
+                    checker = "pdf";
+                    runActivityResult("application/pdf", "Select PDF file");
+                    break;
+                }
+                case 2: {
+                    checker = "docx";
+                    runActivityResult("application/msword", "Select MS Word file");
+                    break;
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void intializeControllers() {
+        chatToolBar = findViewById(R.id.chat_toolbar);
+        setSupportActionBar(chatToolBar);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setDisplayShowCustomEnabled(true);
+
+        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View actionBarView = layoutInflater.inflate(R.layout.custom_chat_bar, null);
+        actionBar.setCustomView(actionBarView);
+
+        userImage = findViewById(R.id.custom_profile_image);
+        userName = findViewById(R.id.custom_profile_name);
+        userLastSeen = findViewById(R.id.custom_user_last_seen);
+
+        sendMessageButton = findViewById(R.id.send_message_btn);
+        sendFileButton = findViewById(R.id.send_files_btn);
+        messageInputText = findViewById(R.id.input_message);
+        userMessagesList = findViewById(R.id.private_messages_list_of_users);
+
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        mLinearLayoutManager.setStackFromEnd(true);
+        userMessagesList.setLayoutManager(mLinearLayoutManager);
+
+        loadingBar = new ProgressDialog(this);
+        loadingBar.setTitle("Sending File");
+        loadingBar.setMessage("Please wait, uploading your image.");
+        loadingBar.setCanceledOnTouchOutside(false);
+
+        adapter = new MessagesAdapter(new
+                FirebaseRecyclerOptions.Builder<Messages>()
+                .setQuery(rootRef.child(Constants.CHILD_MESSAGES)
+                        .child(messageSenderID)
+                        .child(messageReceiverID), Messages.class)
+                .build());
+        userMessagesList.setAdapter(adapter);
+        adapter.registerAdapterDataObserver(new MyScrollToBottomObserver(userMessagesList, adapter, mLinearLayoutManager));
+    }
+
+    private void sendMessage() {
+        String messageText = messageInputText.getText().toString();
+
+        if (TextUtils.isEmpty(messageText)) {
+            Toast.makeText(this, "Please type a message.", Toast.LENGTH_SHORT).show();
+        } else {
+            String messageSenderRef = "Messages/" + messageSenderID + "/" + messageReceiverID;
+            String messageReceiverRef = "Messages/" + messageReceiverID + "/" + messageSenderID;
+
+            DatabaseReference userMessageKeyRef = rootRef.child("Messages")
+                    .child(messageSenderID).child(messageReceiverID).push();
+
+            String messagePushID = userMessageKeyRef.getKey();
+            Messages messages = new Messages(messageSenderID, messageText, "text", messageReceiverID, messagePushID, dtf.format(now));
+            Map<String, String> messageTextBody = messages.getMessagesBody();
+
+            Map<String, Object> messageBodyDetails = new HashMap<>();
+            messageBodyDetails.put(messageSenderRef + "/" + messagePushID, messageTextBody);
+            messageBodyDetails.put(messageReceiverRef + "/" + messagePushID, messageTextBody);
+
+            rootRef.updateChildren(messageBodyDetails)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(ChatActivity.this, "Message Sent.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            String message = task.getException().getMessage();
+                            Toast.makeText(ChatActivity.this, "Error: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                        messageInputText.setText("");
+                    });
+        }
+
     }
 
     private void displayLastSeen() {

@@ -29,6 +29,13 @@ public class Messages {
         this.name = name;
     }
 
+    public Messages(String currentDatetime, String message, String from, String type) {
+        this.currentDatetime = currentDatetime;
+        this.message = message;
+        this.from = from;
+        this.type = type;
+    }
+
     public String getFrom() {
         return from;
     }
@@ -95,4 +102,28 @@ public class Messages {
         messageTextBody.put("currentDatetime", getCurrentDatetime());
         return messageTextBody;
     }
+
+    public Map getGroupMessage() {
+        Map messageTextBody = new HashMap();
+        messageTextBody.put("currentDatetime", getCurrentDatetime());
+        messageTextBody.put("message", getMessage());
+        messageTextBody.put("name", getFrom());
+        messageTextBody.put("type", getType());
+        return messageTextBody;
+    }
+
+    @Override
+    public String toString() {
+        return "Messages{" +
+                "from='" + from + '\'' +
+                ", message='" + message + '\'' +
+                ", type='" + type + '\'' +
+                ", to='" + to + '\'' +
+                ", messageID='" + messageID + '\'' +
+                ", currentDatetime='" + currentDatetime + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
+
+

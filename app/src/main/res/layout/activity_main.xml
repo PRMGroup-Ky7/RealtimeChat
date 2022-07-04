@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.circularreveal.CircularRevealRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -33,15 +33,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/appBarLayout"
-        tools:ignore="SpeakableTextPresentCheck"></androidx.viewpager.widget.ViewPager>
+        tools:ignore="SpeakableTextPresentCheck">
 
-    <RelativeLayout
+    </androidx.viewpager.widget.ViewPager>
+
+    <com.google.android.material.circularreveal.CircularRevealRelativeLayout
         android:id="@+id/fab"
         android:layout_width="match_parent"
         android:layout_height="400dp"
         android:layout_alignParentBottom="true">
 
-        <RelativeLayout
+        <com.google.android.material.circularreveal.CircularRevealRelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="200dp"
@@ -61,7 +63,7 @@
                 android:visibility="invisible"
                 app:elevation="0dp"
                 app:fabCustomSize="45dp"
-                app:srcCompat="@android:drawable/btn_star_big_on" />
+                app:srcCompat="@drawable/ic_magnifying_glass_solid" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_crate_group"
@@ -76,7 +78,7 @@
                 android:visibility="invisible"
                 app:elevation="0dp"
                 app:fabCustomSize="45dp"
-                app:srcCompat="@android:drawable/btn_star_big_on" />
+                app:srcCompat="@drawable/ic_user_group_solid" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_settings"
@@ -91,7 +93,7 @@
                 android:visibility="invisible"
                 app:elevation="0dp"
                 app:fabCustomSize="45dp"
-                app:srcCompat="@android:drawable/btn_star_big_on" />
+                app:srcCompat="@drawable/ic_gear_solid" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_logout"
@@ -106,9 +108,9 @@
                 android:visibility="invisible"
                 app:elevation="0dp"
                 app:fabCustomSize="45dp"
-                app:srcCompat="@android:drawable/btn_star_big_on" />
+                app:srcCompat="@drawable/ic_arrow_right_from_bracket_solid" />
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_friend"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -117,10 +119,11 @@
                 android:layout_marginBottom="341dp"
                 android:layout_toStartOf="@+id/fab_find_friend"
                 android:text="Friends"
-                android:textColor="#000000"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/black"
                 android:visibility="invisible" />
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -129,10 +132,11 @@
                 android:layout_marginBottom="277dp"
                 android:layout_toStartOf="@+id/fab_find_friend"
                 android:text="Group"
-                android:textColor="#000000"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/black"
                 android:visibility="invisible" />
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_setting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -141,10 +145,11 @@
                 android:layout_marginBottom="209dp"
                 android:layout_toStartOf="@+id/fab_find_friend"
                 android:text="Setting"
-                android:textColor="#000000"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/black"
                 android:visibility="invisible" />
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_logout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -153,9 +158,10 @@
                 android:layout_marginBottom="141dp"
                 android:layout_toStartOf="@+id/fab_find_friend"
                 android:text="Logout"
-                android:textColor="#000000"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/black"
                 android:visibility="invisible" />
-        </RelativeLayout>
+        </com.google.android.material.circularreveal.CircularRevealRelativeLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_main"
@@ -169,7 +175,8 @@
             android:clickable="true"
             android:elevation="0dp"
             app:elevation="0dp"
-            app:srcCompat="@android:drawable/btn_star_big_on" />
-    </RelativeLayout>
+            app:srcCompat="@drawable/ic_bars_solid"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.circularreveal.CircularRevealRelativeLayout>
 
-</RelativeLayout>
+</com.google.android.material.circularreveal.CircularRevealRelativeLayout>

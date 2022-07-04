@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcv_online_contact"
+        android:layout_width="match_parent"
+        android:layout_height="511dp"
+        android:layout_below="@+id/textView"
+        android:layout_marginTop="7dp"></androidx.recyclerview.widget.RecyclerView>
+
+    <Button
+        android:id="@+id/btn_close"
+        android:layout_width="230dp"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/rcv_online_contact"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="91dp"
+        android:layout_marginTop="529dp"
+        android:layout_marginEnd="90dp"
+        android:text="Close" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Contacts"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+</RelativeLayout>

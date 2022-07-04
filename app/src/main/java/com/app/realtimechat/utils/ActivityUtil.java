@@ -17,6 +17,7 @@ public class ActivityUtil {
         Intent intent = new Intent(context, tClass);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         activity.startActivity(intent);
+        activity.finish();
     }
 
     public void switchActivity(Context context, Class tClass) {
