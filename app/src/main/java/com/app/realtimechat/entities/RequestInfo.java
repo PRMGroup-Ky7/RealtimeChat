@@ -1,7 +1,7 @@
 package com.app.realtimechat.entities;
 
 public class RequestInfo {
-    String receivedUserUid,requestType;
+    String receivedUserUid, requestType, currentGroupName;
 
     public RequestInfo() {
     }
@@ -30,5 +30,13 @@ public class RequestInfo {
 
     public void setReceivedUserUid(String receivedUserUid) {
         this.receivedUserUid = receivedUserUid;
+    }
+
+    public String getCurrentGroupName() {
+        return currentGroupName;
+    }
+
+    public void setCurrentGroupName(String currentGroupName) {
+        this.currentGroupName = currentGroupName;
     }
 }

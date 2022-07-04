@@ -1,6 +1,5 @@
 package com.app.realtimechat.adapters;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -15,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.realtimechat.R;
 import com.app.realtimechat.entities.Messages;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -23,35 +24,24 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
-
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
-    private final List<Messages> userMessagesList;
+public class MessagesAdapter extends FirebaseRecyclerAdapter<Messages, MessagesAdapter.MessageViewHolder> {
+
+    private final FirebaseRecyclerOptions options;
     private FirebaseAuth mAuth;
     private DatabaseReference usersRef;
 
-
-    public MessageAdapter(List<Messages> userMessagesList) {
-        this.userMessagesList = userMessagesList;
-    }
-
-    @NonNull
-    @Override
-    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.custom_messages_layout, viewGroup, false);
-
-        mAuth = FirebaseAuth.getInstance();
-
-        return new MessageViewHolder(view);
+    public MessagesAdapter(@NonNull FirebaseRecyclerOptions<Messages> options) {
+        super(options);
+        this.options = options;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull final MessageViewHolder messageViewHolder, @SuppressLint("RecyclerView") final int position) {
+    protected void onBindViewHolder(@NonNull MessagesAdapter.MessageViewHolder messageViewHolder, int position, @NonNull Messages model) {
+        Messages messages = (Messages) options.getSnapshots().get(position);
+
         String messageSenderId = mAuth.getCurrentUser().getUid();
-        Messages messages = userMessagesList.get(position);
 
         String fromUserID = messages.getFrom();
         String fromMessageType = messages.getType();
@@ -63,7 +53,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild("image")) {
                     String receiverImage = dataSnapshot.child("image").getValue().toString();
-
                     Picasso.get().load(receiverImage).into(messageViewHolder.receiverProfileImage);
                 }
             }
@@ -73,7 +62,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
             }
         });
-
 
         messageViewHolder.receiverMessageText.setVisibility(View.GONE);
         messageViewHolder.receiverProfileImage.setVisibility(View.GONE);
@@ -114,7 +102,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                     messageViewHolder.messageSenderPicture.setVisibility(View.VISIBLE);
                     messageViewHolder.messageSenderPicture.setBackgroundResource(R.drawable.file);
                     messageViewHolder.itemView.setOnClickListener(v -> {
-                        Uri url = Uri.parse(userMessagesList.get(position).getMessage());
+                        Uri url = Uri.parse(messages.getMessage());
                         Intent intent = new Intent(Intent.ACTION_VIEW, url);
                         messageViewHolder.itemView.getContext().startActivity(intent);
                     });
@@ -127,9 +115,13 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         }
     }
 
+    @NonNull
     @Override
-    public int getItemCount() {
-        return userMessagesList.size();
+    public MessagesAdapter.MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.custom_messages_layout, parent, false);
+        mAuth = FirebaseAuth.getInstance();
+
+        return new MessageViewHolder(view);
     }
 
     public class MessageViewHolder extends RecyclerView.ViewHolder {
@@ -148,5 +140,4 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             messageSenderPicture = itemView.findViewById(R.id.message_sender_image_view);
         }
     }
-
 }

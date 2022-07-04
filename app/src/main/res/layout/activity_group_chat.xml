@@ -6,6 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".GroupChatActivity">
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_invite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/group_chat_bar_layout"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="5dp"
+        android:text="Invite" />
+
     <include
         android:id="@+id/group_chat_bar_layout"
         layout="@layout/app_bar_layout">
@@ -57,9 +67,10 @@
 
         <ImageButton
             android:id="@+id/send_message_button"
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/send_message" />
+            android:layout_width="88dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/send_message"
+            tools:ignore="SpeakableTextPresentCheck" />
 
 
     </LinearLayout>

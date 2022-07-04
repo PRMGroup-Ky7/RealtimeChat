@@ -16,6 +16,8 @@ import androidx.fragment.app.Fragment;
 import com.app.realtimechat.GroupChatActivity;
 import com.app.realtimechat.R;
 import com.app.realtimechat.utils.Constants;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -37,10 +39,12 @@ public class GroupsFragment extends Fragment {
     private View groupFragmentView;
     private ListView listView;
     private ArrayAdapter<String> arrayAdapter;
-    private DatabaseReference groupRef;
+    private DatabaseReference groupRef, rootRef;
+    private FirebaseAuth auth;
+    private FirebaseUser currentUser;
 
     public GroupsFragment() {
-        // Required empty public constructor
+
     }
 
     @Nullable
@@ -48,6 +52,9 @@ public class GroupsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         groupFragmentView = inflater.inflate(R.layout.fragment_groups, container, false);
         groupRef = FirebaseDatabase.getInstance().getReference().child(Constants.CHILD_GROUPS);
+        rootRef = FirebaseDatabase.getInstance().getReference();
+        auth = FirebaseAuth.getInstance();
+        currentUser = auth.getCurrentUser();
         initializeFields();
         retrieveAndDisplayGroups();
         listView.setOnItemClickListener((parent, view, position, id) -> {
@@ -67,26 +74,33 @@ public class GroupsFragment extends Fragment {
 
 
     private void retrieveAndDisplayGroups() {
-        groupRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        rootRef.child(Constants.CHILD_USERS)
+                .child(currentUser.getUid())
+                .child("groups")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            Set<String> set = new HashSet<>();
+                            Iterator getGroups = snapshot.getChildren().iterator();
+                            while (getGroups.hasNext()) {
+                                DataSnapshot ds = (DataSnapshot) getGroups.next();
+                                String name = ds.getKey();
+                                boolean isGroup = Boolean.parseBoolean(String.valueOf(ds.getValue()));
+                                if (isGroup) {
+                                    set.add(name);
+                                }
+                            }
+                            groups.clear();
+                            groups.addAll(set);
+                            arrayAdapter.notifyDataSetChanged();
+                        }
+                    }
 
-                Set<String> set = new HashSet<>();
-                Iterator iterator = dataSnapshot.getChildren().iterator();
-                while (iterator.hasNext()) {
-                    set.add(((DataSnapshot) iterator.next()).getKey());
-                }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
 
-                groups.clear();
-                groups.addAll(set);
-                arrayAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
+                    }
+                });
     }
 }

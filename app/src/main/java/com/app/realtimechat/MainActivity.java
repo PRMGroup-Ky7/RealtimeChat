@@ -30,21 +30,23 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final ActivityUtil aUtil = new ActivityUtil(this);
-    private boolean clicked = false;
+    private ActivityUtil aUtil;
+    private FloatingActionButton[] fabArray;
+    private TextView[] tvArray;
+    private boolean isClicked = false;
     private Toolbar mToolbar;
     private ViewPager myViewPager;
     private TabLayout myTabLayout;
     private TabsAccessorAdapter mTabsAccessorAdapter;
     private FirebaseAuth mAuth;
-    private FirebaseUser user;
-    private DatabaseReference rootRef;
+    private FirebaseUser currentUser;
+    private DatabaseReference rootRef, userRef;
     private FloatingActionButton fabMain, fabFriend, fabCreateGroup, fabSetting, fabLogout;
     private Animation rotateOpen, rotateClose, fromBottom, toBottom;
-    private TextView tvFriend, tvGroup, tvSetting, tvLogout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,12 +55,13 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();
-        user = mAuth.getCurrentUser();
+        currentUser = mAuth.getCurrentUser();
+        aUtil = new ActivityUtil(this);
+
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
-        String name = user.getDisplayName() != null ? user.getDisplayName() : "";
-        getSupportActionBar().setTitle("Welcome " + name + " !");
+        getSupportActionBar().setTitle("Welcome");
 
         myViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -69,17 +72,13 @@ public class MainActivity extends AppCompatActivity {
 
         initFab();
 
-        fabMain.setOnClickListener(v -> {
-            handleFabMain();
-        });
+        fabMain.setOnClickListener(v -> handleFabMain());
 
         fabFriend.setOnClickListener(v -> {
             aUtil.switchActivity(MainActivity.this, FindFriendsActivity.class);
         });
 
-        fabCreateGroup.setOnClickListener(v -> {
-            requestNewGroup();
-        });
+        fabCreateGroup.setOnClickListener(v -> requestNewGroup());
 
         fabSetting.setOnClickListener(v -> {
             aUtil.switchActivity(MainActivity.this, SettingsActivity.class);
@@ -93,88 +92,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleFabMain() {
-        setVisibility(clicked);
-        setAnimation(clicked);
-        setClickable(clicked);
-        clicked = !clicked;
-    }
-
-    private void setVisibility(boolean clicked) {
-        if (!clicked) {
-            fabFriend.setVisibility(View.VISIBLE);
-            fabCreateGroup.setVisibility(View.VISIBLE);
-            fabSetting.setVisibility(View.VISIBLE);
-            fabLogout.setVisibility(View.VISIBLE);
-
-            tvFriend.setVisibility(View.VISIBLE);
-            tvGroup.setVisibility(View.VISIBLE);
-            tvSetting.setVisibility(View.VISIBLE);
-            tvLogout.setVisibility(View.VISIBLE);
-
-        } else {
-            fabFriend.setVisibility(View.INVISIBLE);
-            fabCreateGroup.setVisibility(View.INVISIBLE);
-            fabSetting.setVisibility(View.INVISIBLE);
-            fabLogout.setVisibility(View.INVISIBLE);
-
-            tvFriend.setVisibility(View.INVISIBLE);
-            tvGroup.setVisibility(View.INVISIBLE);
-            tvSetting.setVisibility(View.INVISIBLE);
-            tvLogout.setVisibility(View.INVISIBLE);
-
+        for (FloatingActionButton fab : fabArray) {
+            for (TextView textView : tvArray) {
+                if (!isClicked) {
+                    fab.setVisibility(View.VISIBLE);
+                    fab.startAnimation(fromBottom);
+                    textView.startAnimation(fromBottom);
+                    fab.setClickable(true);
+                    fabMain.setImageDrawable(getDrawable(R.drawable.ic_xmark_solid));
+                    fabMain.startAnimation(rotateOpen);
+                } else {
+                    fab.setVisibility(View.INVISIBLE);
+                    fab.startAnimation(toBottom);
+                    textView.startAnimation(toBottom);
+                    fab.setClickable(false);
+                    fabMain.setImageDrawable(getDrawable(R.drawable.ic_bars_solid));
+                    fabMain.startAnimation(rotateClose);
+                }
+            }
         }
+        isClicked = !isClicked;
     }
-
-    private void setAnimation(boolean clicked) {
-        if (!clicked) {
-            fabFriend.startAnimation(fromBottom);
-            fabCreateGroup.startAnimation(fromBottom);
-            fabSetting.startAnimation(fromBottom);
-            fabLogout.startAnimation(fromBottom);
-
-            tvFriend.startAnimation(fromBottom);
-            tvGroup.startAnimation(fromBottom);
-            tvSetting.startAnimation(fromBottom);
-            tvLogout.startAnimation(fromBottom);
-
-            fabMain.startAnimation(rotateOpen);
-
-        } else {
-            fabFriend.startAnimation(toBottom);
-            fabCreateGroup.startAnimation(toBottom);
-            fabSetting.startAnimation(toBottom);
-            fabLogout.startAnimation(toBottom);
-
-            tvFriend.startAnimation(toBottom);
-            tvGroup.startAnimation(toBottom);
-            tvSetting.startAnimation(toBottom);
-            tvLogout.startAnimation(toBottom);
-
-            fabMain.startAnimation(rotateClose);
-        }
-    }
-
-    private void setClickable(boolean clicked) {
-        if (!clicked) {
-            fabFriend.setClickable(true);
-            fabCreateGroup.setClickable(true);
-            fabSetting.setClickable(true);
-            fabLogout.setClickable(true);
-        } else {
-            fabFriend.setClickable(false);
-            fabCreateGroup.setClickable(false);
-            fabSetting.setClickable(false);
-            fabLogout.setClickable(false);
-        }
-    }
-
 
     private void initFab() {
-        tvFriend = findViewById(R.id.tv_friend);
-        tvSetting = findViewById(R.id.tv_setting);
-        tvGroup = findViewById(R.id.tv_group);
-        tvLogout = findViewById(R.id.tv_logout);
-
         fabMain = findViewById(R.id.fab_main);
         fabFriend = findViewById(R.id.fab_find_friend);
         fabSetting = findViewById(R.id.fab_settings);
@@ -185,12 +125,23 @@ public class MainActivity extends AppCompatActivity {
         rotateClose = AnimationUtils.loadAnimation(this, R.anim.rotate_close_anim);
         fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom_anim);
         toBottom = AnimationUtils.loadAnimation(this, R.anim.to_bottom_anim);
+
+        fabArray = new FloatingActionButton[]{
+                fabFriend, fabCreateGroup, fabSetting, fabLogout
+        };
+
+        tvArray = new TextView[]{
+                findViewById(R.id.tv_friend),
+                findViewById(R.id.tv_group),
+                findViewById(R.id.tv_setting),
+                findViewById(R.id.tv_logout)
+        };
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (user == null) {
+        if (currentUser == null) {
             aUtil.switchActivityWithFlag(this, LoginActivity.class);
         } else {
             verifyUserExist();
@@ -240,9 +191,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void createNewGroup(final String groupName) {
+        Map owner = new HashMap();
+        owner.put("owner", currentUser.getUid());
+
+        Map members = new HashMap();
+        members.put(currentUser.getUid(), true);
+        owner.put("members", members);
+
         rootRef.child(Constants.CHILD_GROUPS)
                 .child(groupName)
-                .setValue("")
+                .setValue(owner)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(MainActivity.this, groupName + " is created successfully.", Toast.LENGTH_SHORT).show();
@@ -250,12 +208,22 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Error occurred while creating group.", Toast.LENGTH_SHORT).show();
                     }
                 });
+
+        Map groups = new HashMap();
+        groups.put(groupName, true);
+        rootRef.child(Constants.CHILD_USERS)
+                .child(currentUser.getUid())
+                .child("groups")
+                .updateChildren(groups)
+                .addOnCompleteListener(task -> {
+                    Toast.makeText(this, "Updated children", Toast.LENGTH_SHORT).show();
+                });
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (user != null) {
+        if (currentUser != null) {
             updateUserStatus("offline");
         }
     }
@@ -263,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (user != null) {
+        if (currentUser != null) {
             updateUserStatus("offline");
         }
     }
@@ -273,10 +241,10 @@ public class MainActivity extends AppCompatActivity {
         onlineStateMap.put("currentDatetime", Constants.getCurrentDatetime());
         onlineStateMap.put("state", state);
 
-        user = mAuth.getCurrentUser();
-        if (user != null) {
+        currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
             rootRef.child(Constants.CHILD_USERS)
-                    .child(user.getUid())
+                    .child(currentUser.getUid())
                     .child("userState")
                     .updateChildren(onlineStateMap);
         }

@@ -3,6 +3,9 @@ package com.app.realtimechat;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.transition.Fade;
+import android.transition.TransitionManager;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -24,12 +27,13 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etEmail, etPassword;
     private TextView tvNewAccountLink;
     private ActivityUtil activityUtil;
+    private ViewGroup rootView;
+    private Fade fade;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_alt);
-
         activityUtil = new ActivityUtil(LoginActivity.this);
         mAuth = FirebaseAuth.getInstance();
         mAuth.signOut();
@@ -39,11 +43,16 @@ public class LoginActivity extends AppCompatActivity {
 
         loginButton.setOnClickListener(v -> {
             allowUserToLogin();
+            TransitionManager.beginDelayedTransition(rootView, fade);
         });
 
         tvNewAccountLink.setOnClickListener(v -> {
             activityUtil.switchActivity(LoginActivity.this, RegisterActivity.class);
         });
+
+        rootView = findViewById(R.id.login_layout);
+
+        fade = new Fade(Fade.IN);
 
     }
 
